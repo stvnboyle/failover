@@ -1,0 +1,227 @@
+import type { Lesson } from "@/content/schema";
+
+// DRAFT — awaiting review. Written from the Amazon EC2 Auto Scaling User Guide; every exercise links the page it rests on.
+
+const ASG = {
+  title: "What is Amazon EC2 Auto Scaling?",
+  url: "https://docs.aws.amazon.com/autoscaling/ec2/userguide/what-is-amazon-ec2-auto-scaling.html",
+};
+const BENEFITS = {
+  title: "Auto Scaling benefits for application architecture",
+  url: "https://docs.aws.amazon.com/autoscaling/ec2/userguide/auto-scaling-benefits.html",
+};
+const HEALTH = {
+  title: "Health checks for instances in an Auto Scaling group",
+  url: "https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-health-checks.html",
+};
+const TARGET_TRACKING = {
+  title: "Target tracking scaling policies for Amazon EC2 Auto Scaling",
+  url: "https://docs.aws.amazon.com/autoscaling/ec2/userguide/as-scaling-target-tracking.html",
+};
+
+export const autoScaling: Lesson = {
+  id: "auto-scaling",
+  title: "Auto scaling",
+  summary: "Replacing servers that fail and adding more under load, with nobody awake to do it.",
+  steps: [
+    {
+      type: "card",
+      id: "card-group",
+      concept: "scaling-group",
+      title: "A group that keeps the right number of servers",
+      body: "An Auto Scaling group is a set of identical servers with a minimum, a maximum and a desired count. It builds each one from a launch template, so every server it adds is the same as the last.",
+      diagram: [
+        { id: "template", icon: "file", label: "Launch template", tag: "AMI · type · security group" },
+        { id: "group", icon: "group", label: "Auto Scaling group", tag: "min 2 · desired 2 · max 6", holds: ["eu-west-2a · server", "eu-west-2b · server"] },
+      ],
+    },
+    {
+      type: "match",
+      id: "group-vocabulary",
+      concept: "scaling-group",
+      prompt: "Match each Auto Scaling setting to what it does.",
+      pairs: [
+        { left: "Minimum", right: "The group never drops below this many servers", why: "The minimum is the floor, however quiet things get." },
+        { left: "Maximum", right: "The group never grows beyond this many servers", why: "The maximum is the ceiling, however busy things get." },
+        { left: "Desired capacity", right: "The number of servers it aims to have running now", why: "Desired capacity is the current target, somewhere between the minimum and the maximum." },
+        { left: "Launch template", right: "The recipe each new server is built from", why: "The launch template holds the configuration for every server the group launches." },
+      ],
+      explanation: "The group moves its desired capacity up and down between the minimum and maximum, and launches from the template to get there.",
+      source: ASG,
+      domains: ["clf-3", "saa-2"],
+      pillars: ["reliability"],
+    },
+    {
+      type: "choice",
+      id: "terminated-by-mistake",
+      concept: "scaling-group",
+      prompt: "A group has a desired capacity of two. Someone terminates one of its servers by mistake. What does the group do?",
+      options: [
+        { id: "replace", text: "It launches a replacement, to get back to two", correct: true, why: "The group replaces terminated or impaired servers to maintain its desired capacity." },
+        { id: "wait", text: "Nothing, until traffic rises enough to need a second server", why: "Traffic doesn't come into it. One server is fewer than the desired two, so it acts straight away." },
+        { id: "alert", text: "It sends an alert and waits for someone to act", why: "Nobody needs to act. Getting back to the desired count is the group's own job." },
+        { id: "lower", text: "It lowers its desired capacity to one", why: "The desired capacity is what the group works towards. It doesn't lower it to match what is left." },
+      ],
+      explanation: "This is the simplest thing an Auto Scaling group does, and the most valuable: it keeps the count where you set it.",
+      source: ASG,
+      domains: ["clf-3", "saa-2"],
+      pillars: ["reliability"],
+    },
+    {
+      type: "choice",
+      id: "above-the-maximum",
+      concept: "scaling-group",
+      prompt: "A group's maximum is six. A sudden surge would really need nine servers. How many does the group run?",
+      options: [
+        { id: "six", text: "Six", correct: true, why: "The group never goes above its maximum, whatever the demand." },
+        { id: "nine", text: "Nine, because demand comes first", why: "The maximum is a hard ceiling. It exists so that a surge, or a bug, can't run up an unlimited bill." },
+        { id: "borrow", text: "Six, plus three borrowed from another group", why: "Groups don't lend servers to each other. Each one stays inside its own limits." },
+        { id: "raise", text: "Nine, after raising its own maximum", why: "The group never changes its own limits. Only you can raise the maximum." },
+      ],
+      explanation: "The maximum protects your budget, and the minimum protects your users. Choosing both is part of the design.",
+      source: ASG,
+      domains: ["saa-3", "saa-4"],
+      pillars: ["cost-optimization", "performance-efficiency"],
+    },
+    {
+      type: "card",
+      id: "card-policy",
+      concept: "scaling-policy",
+      title: "A scaling policy follows demand",
+      body: "With target tracking you pick a measure and a target, such as average CPU at 50 percent, and the group adds or removes servers to hold it there. It works like a thermostat, and always stays between the minimum and the maximum.",
+      diagram: [
+        { id: "policy", icon: "policy", label: "Scaling policy", tag: "keep average CPU at 50%" },
+        { id: "group", icon: "group", label: "Auto Scaling group", tag: "min 2 · max 6" },
+      ],
+    },
+    {
+      type: "choice",
+      id: "lunchtime-rush",
+      concept: "scaling-policy",
+      prompt: "The policy's target is an average CPU of 50 percent. A lunchtime rush pushes the average to 80 percent. What does the group do?",
+      options: [
+        { id: "out", text: "It adds servers, which brings the average back down", correct: true, why: "Above the target, the group scales out. More servers sharing the work means each one is less busy." },
+        { id: "in", text: "It removes servers, to save money", why: "Removing servers would make the rest busier still. That is what happens when the average is below the target." },
+        { id: "nothing", text: "Nothing, since 80 percent is still under 100", why: "The target is 50, not 100. The headroom is deliberate, so a sudden spike has somewhere to go." },
+        { id: "restart", text: "It restarts the busiest servers", why: "Busy servers aren't broken. The answer to more work is more servers, not restarts." },
+      ],
+      explanation: "Adding capacity is called scaling out. The group keeps adding until the average is back around the target, or it reaches its maximum.",
+      source: TARGET_TRACKING,
+      domains: ["clf-3", "saa-3"],
+      pillars: ["performance-efficiency"],
+    },
+    {
+      type: "choice",
+      id: "after-the-rush",
+      concept: "scaling-policy",
+      prompt: "The rush ends and average CPU falls to 20 percent, well under the target of 50. What happens now?",
+      options: [
+        { id: "in", text: "The group removes servers, but never below its minimum", correct: true, why: "Below the target, the group scales in, and you stop paying for the servers it removes." },
+        { id: "keep", text: "It keeps every server, in case the rush returns", why: "Holding idle servers is the waste a scaling policy is there to avoid. It can add them again in minutes." },
+        { id: "zero", text: "It removes every server until traffic returns", why: "The minimum is a floor. However quiet it gets, the group keeps at least that many running." },
+        { id: "smaller", text: "It swaps each server for a smaller type", why: "A scaling policy changes how many servers there are, not what size they are." },
+      ],
+      explanation: "Removing capacity is called scaling in. It happens more cautiously than scaling out, because running short is worse than running a little over.",
+      source: TARGET_TRACKING,
+      domains: ["clf-3", "saa-4"],
+      pillars: ["cost-optimization"],
+    },
+    {
+      type: "match",
+      id: "scaling-vocabulary",
+      concept: "scaling-policy",
+      prompt: "Match each scaling term to what it means.",
+      pairs: [
+        { left: "Scale out", right: "Add servers", why: "Scaling out increases capacity by adding servers." },
+        { left: "Scale in", right: "Remove servers", why: "Scaling in decreases capacity by removing servers." },
+        { left: "Target value", right: "The level the group tries to hold a measure at", why: "The target is the figure the policy steers towards, such as 50 percent CPU." },
+      ],
+      explanation: "Out and in always mean more or fewer servers. A scaling policy never makes an individual server bigger or smaller.",
+      source: TARGET_TRACKING,
+      domains: ["clf-3"],
+      pillars: [],
+    },
+    {
+      type: "card",
+      id: "card-self-healing",
+      concept: "self-healing",
+      title: "It replaces what fails, across zones",
+      body: "The group watches the health of its servers and replaces any that fail. Spread it over two zones and it keeps them balanced, launching in the healthy zone if the other becomes unavailable.",
+      diagram: [
+        { id: "lb", icon: "balancer", label: "Load balancer" },
+        { id: "group", icon: "group", label: "Auto Scaling group", tag: "two zones", holds: ["eu-west-2a · healthy", "eu-west-2b · being replaced"] },
+      ],
+    },
+    {
+      type: "choice",
+      id: "joining-the-load-balancer",
+      concept: "self-healing",
+      prompt: "The group launches a brand-new server. How does the load balancer come to send it traffic?",
+      options: [
+        { id: "auto", text: "The group registers it with the load balancer automatically", correct: true, why: "Servers are registered when the group launches them and deregistered when it terminates them." },
+        { id: "manual", text: "Someone adds it to the load balancer by hand", why: "That would defeat the point of doing this automatically. The group handles registration itself." },
+        { id: "scan", text: "The load balancer scans the VPC for new servers every hour", why: "The load balancer doesn't go looking. It is told about each new server by the group." },
+        { id: "dns", text: "The new server gets its own public address for users", why: "Users only ever use the load balancer's address. New servers join behind it." },
+      ],
+      explanation: "This is where the last three lessons join up: templates make servers identical, the group makes more of them, and the load balancer shares out the work.",
+      source: ASG,
+      domains: ["clf-3", "saa-2"],
+      pillars: ["reliability", "operational-excellence"],
+    },
+    {
+      type: "choice",
+      id: "which-health-check",
+      concept: "self-healing",
+      prompt: "The software on one server hangs, though the machine is running fine. The load balancer has stopped sending it traffic. Will the group replace it?",
+      options: [
+        { id: "if-enabled", text: "Only if the group is set to use the load balancer's health checks", correct: true, why: "By default the group only checks the machine itself. The load balancer's view of health is an option you turn on." },
+        { id: "always", text: "Yes, always. The two share one view of health", why: "They don't by default. The built-in check is about the machine, and a hung app can pass it." },
+        { id: "never", text: "No. A group can only replace servers that are switched off", why: "It can do better than that, once it has been told to listen to the load balancer." },
+        { id: "day", text: "Yes, but only after a full day of failing", why: "There's no such waiting period. A server found unhealthy is replaced promptly." },
+      ],
+      explanation: "Without this setting you can be left with a server that receives no traffic and is never replaced: running, paid for, and useless.",
+      source: HEALTH,
+      domains: ["saa-2"],
+      pillars: ["reliability"],
+    },
+    {
+      type: "fix",
+      id: "group-in-one-zone",
+      concept: "self-healing",
+      prompt: "A team has a load balancer across two zones and an Auto Scaling group behind it. One part of this design still goes down with a single zone. Find it, then choose the fix.",
+      diagram: [
+        { id: "lb", icon: "balancer", label: "Load balancer", tag: "eu-west-2a and eu-west-2b" },
+        { id: "group", icon: "group", label: "Auto Scaling group", tag: "subnets in eu-west-2a only" },
+      ],
+      faulty: "group",
+      innocent: {
+        lb: "A load balancer across both zones is correct. It just has nothing to send traffic to in the second one.",
+      },
+      replacements: [
+        { id: "both", text: "The group, given subnets in both zones", correct: true, why: "With subnets in two zones, the group spreads its servers across them and can launch in whichever is healthy." },
+        { id: "max", text: "The group, with its maximum raised to twelve", why: "More servers in the same zone all fail together. The number isn't the problem." },
+        { id: "template", text: "The group, with a second launch template", why: "The template decides what a server is, not where it runs. The zones come from the group's subnets." },
+      ],
+      explanation: "A group can only launch servers in the subnets you give it, so its zones are whichever zones those subnets are in.",
+      source: BENEFITS,
+      domains: ["saa-2"],
+      pillars: ["reliability"],
+    },
+    {
+      type: "choice",
+      id: "zone-lost-under-a-group",
+      concept: "self-healing",
+      prompt: "A group runs four servers, two in each of two zones. One zone becomes unavailable. What does the group do?",
+      options: [
+        { id: "compensate", text: "It launches servers in the other zone to make up the number", correct: true, why: "If one zone becomes unavailable, the group can launch servers in another to compensate." },
+        { id: "wait", text: "It waits for the lost zone to come back", why: "Waiting would leave the app at half strength for as long as the outage lasts." },
+        { id: "halve", text: "It halves its desired capacity to match", why: "The desired capacity doesn't change. The group works to meet it using the zone it still has." },
+        { id: "move", text: "It moves the two lost servers across", why: "Servers can't be moved between zones. New ones are launched from the template." },
+      ],
+      explanation: "When the lost zone recovers, the group rebalances by itself, launching there again and removing the extras elsewhere.",
+      source: BENEFITS,
+      domains: ["clf-3", "saa-2"],
+      pillars: ["reliability"],
+    },
+  ],
+};

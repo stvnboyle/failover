@@ -25,6 +25,7 @@ const ICON: Record<Part["icon"], { color: string; glyph: ReactNode }> = {
   gateway: { color: "#34d399", glyph: icon(<><path d="M3 12V5.500a4 4 0 0 1 8 0V12" /><path d="M1.500 12h11M7 5v4M5.500 7.500L7 9l1.500-1.500" /></>) },
   firewall: { color: "#fbbf24", glyph: icon(<><rect x="1.500" y="2.500" width="11" height="9" rx="1" /><path d="M1.500 5.500h11M1.500 8.500h11M5 2.500v3M9 5.500v3M5 8.500v3" /></>) },
   balancer: { color: "#a78bfa", glyph: icon(<><path d="M1.500 7h4M5.500 7l4-4M5.500 7h4M5.500 7l4 4" /><circle cx="11" cy="3" r="1" /><circle cx="11" cy="7" r="1" /><circle cx="11" cy="11" r="1" /></>) },
+  group: { color: "#fb923c", glyph: icon(<><rect x="1.500" y="1.500" width="11" height="11" rx="1.500" strokeDasharray="2.500 1.800" /><rect x="3.800" y="5" width="2.600" height="4" rx="0.500" /><rect x="7.600" y="5" width="2.600" height="4" rx="0.500" /></>) },
   script: { color: "#f87171", glyph: icon(<><path d="M4.500 4L1.500 7l3 3M9.500 4l3 3-3 3M8 2.500l-2 9" /></>) },
 };
 

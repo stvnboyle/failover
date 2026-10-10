@@ -154,7 +154,7 @@ Reordered on 2026-10-11 to bring Solutions Architect material and the coverage v
 1. **Throwaway canvas prototype.** Done, in `app/prototype/canvas`. Snap to zones won, and plain rules judged it fairly.
 2. **Lesson engine and the on-ramp unit.** Done: the engine and all three on-ramp lessons are built and awaiting content review. Not yet deployed.
 3. **Coverage view.** A first version is built at `/coverage`: per exam domain, how many written exercises have been answered correctly. It still needs mastery levels and a way to show how much of each domain is unwritten.
-4. **Main unit lessons**, drafted and reviewed one at a time. This unit carries most of the Solutions Architect weight. *In progress: lessons 1 to 4 of 6 are drafted.*
+4. **Main unit lessons**, drafted and reviewed one at a time. This unit carries most of the Solutions Architect weight. *All six lessons are drafted and awaiting content review.*
 5. **The real capstone canvas**, built with what the prototype taught.
 6. **Scenario mode**: random scenarios on the capstone canvas.
 7. **The rest of the progress view**: mastery, streak, review queue.

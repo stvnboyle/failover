@@ -43,6 +43,7 @@ export const ICONS = [
   "gateway",
   "firewall",
   "balancer",
+  "group",
 ] as const;
 
 /** One box in a diagram. Diagrams are a chain read left to right. */
