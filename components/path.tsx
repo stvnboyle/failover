@@ -126,7 +126,7 @@ export function Path({ units }: { units: Unit[] }) {
                       />
                       <span className={`w-px flex-1 ${last ? "bg-transparent" : "bg-zinc-800"}`} />
                     </div>
-                    <div className="flex-1 py-1">
+                    <div className="min-w-0 flex-1 py-1">
                       {written && href ? (
                         <Link href={href} className="group block">
                           {body}

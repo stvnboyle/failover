@@ -1,0 +1,241 @@
+import type { Lesson } from "@/content/schema";
+
+// DRAFT — awaiting review. Written from the Amazon CloudFront Developer Guide; every exercise links the page it rests on.
+
+const CF_HOW = {
+  title: "How CloudFront delivers content",
+  url: "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/HowCloudFrontWorks.html",
+};
+const CF_EXPIRATION = {
+  title: "Manage how long content stays in the cache",
+  url: "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html",
+};
+const CF_VIEWER_HTTPS = {
+  title: "Require HTTPS for communication between viewers and CloudFront",
+  url: "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-viewers-to-cloudfront.html",
+};
+const CF_OAC = {
+  title: "Restrict access to an Amazon S3 origin",
+  url: "https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-s3.html",
+};
+const R53_CLOUDFRONT = {
+  title: "Routing traffic to an Amazon CloudFront distribution",
+  url: "https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-to-cloudfront-distribution.html",
+};
+
+export const cdn: Lesson = {
+  id: "cdn",
+  title: "A front door near every visitor",
+  summary: "CloudFront: copies of the site close to people, HTTPS for visitors, and a bucket that stays private.",
+  steps: [
+    {
+      type: "card",
+      id: "card-edge",
+      concept: "cdn-edge",
+      title: "Copies close to the visitor",
+      body: "CloudFront keeps copies of your files at edge locations around the world, and sends each visitor to the one that can answer fastest. The place it fetches the originals from, here your bucket, is called the origin.",
+      diagram: [
+        { id: "visitor", icon: "visitor", label: "Visitor", tag: "Sydney" },
+        { id: "edge", icon: "cdn", label: "Edge location", tag: "CloudFront · Sydney" },
+        { id: "origin", icon: "bucket", label: "my-site", tag: "origin · London" },
+      ],
+    },
+    {
+      type: "choice",
+      id: "first-request",
+      concept: "cdn-edge",
+      prompt: "A visitor in Sydney is the first person there to ask for logo.png, so the nearby edge location doesn't have it yet. What happens?",
+      options: [
+        { id: "fetch", text: "The edge location fetches it from the origin, passes it on, and keeps a copy", correct: true, why: "A miss costs one trip to the origin. The copy it keeps serves everyone who asks after that." },
+        { id: "notfound", text: "The visitor gets a 404 until the file has been copied out", why: "Nothing is copied out in advance. The edge location fetches a file the first time someone asks for it." },
+        { id: "redirect", text: "The visitor is redirected to the bucket's own URL", why: "The visitor only ever talks to CloudFront. The edge location does the fetching on their behalf." },
+        { id: "nightly", text: "The request waits for the next scheduled sync", why: "There's no schedule. Files reach an edge location on demand, when they are first requested." },
+      ],
+      explanation: "CloudFront starts passing the file to the visitor as soon as the first byte arrives from the origin, and adds it to the cache for next time.",
+      source: CF_HOW,
+      domains: ["clf-3", "saa-3"],
+      pillars: ["performance-efficiency"],
+    },
+    {
+      type: "choice",
+      id: "second-request",
+      concept: "cdn-edge",
+      prompt: "A minute later, someone else in Sydney asks for the same logo.png. Where does it come from?",
+      options: [
+        { id: "cache", text: "Straight from the edge location's cache", correct: true, why: "The copy is already there, so the request never travels to London." },
+        { id: "origin", text: "From the origin again, as every request does", why: "Going back to the origin every time would defeat the point. The edge location answers from its cache." },
+        { id: "peer", text: "From the first visitor's browser", why: "Browsers don't serve files to each other. The copy is held by CloudFront at the edge location." },
+        { id: "replica", text: "From a second bucket that CloudFront created in Sydney", why: "CloudFront caches files at edge locations. It doesn't create buckets." },
+      ],
+      explanation: "This is where the speed comes from: popular files are answered close to the visitor, and the origin sees far fewer requests.",
+      source: CF_HOW,
+      domains: ["clf-3", "saa-3"],
+      pillars: ["performance-efficiency"],
+    },
+    {
+      type: "choice",
+      id: "stale-after-upload",
+      concept: "cdn-edge",
+      prompt: "You upload a corrected index.html to the bucket, but visitors still get the old page. What is going on, and what fixes it soonest?",
+      options: [
+        { id: "invalidate", text: "Edge locations are still serving their cached copy. Invalidate the file", correct: true, why: "An invalidation removes the cached copy before it expires, so the next request fetches the new file." },
+        { id: "upload", text: "The upload failed. Upload the file again", why: "The bucket has the new file. It is the copies at the edge locations that are out of date." },
+        { id: "wait", text: "S3 takes a day to apply changes. Nothing can be done", why: "The bucket updates straight away. The delay is the cache, and you don't have to wait it out." },
+        { id: "recreate", text: "The distribution is broken. Delete it and make a new one", why: "Nothing is broken. Serving the cached copy until it expires is exactly what a cache is for." },
+      ],
+      explanation: "A cached file is served until it expires, a day by default if you set nothing else. Invalidating it sends CloudFront back to the origin on the next request.",
+      source: CF_EXPIRATION,
+      domains: ["clf-3", "saa-3"],
+      pillars: ["performance-efficiency", "operational-excellence"],
+    },
+    {
+      type: "slot",
+      id: "closer-to-visitors",
+      concept: "cdn-edge",
+      prompt: "Your visitors are spread around the world, and the bucket lives in one Region. What goes in the gap to bring the files closer to them?",
+      diagram: [
+        { id: "visitor", icon: "visitor", label: "Visitors", tag: "worldwide" },
+        { id: "bucket", icon: "bucket", label: "my-site", tag: "one Region" },
+      ],
+      gap: 1,
+      options: [
+        { part: { id: "cloudfront", icon: "cdn", label: "CloudFront", tag: "content delivery network" }, correct: true, why: "A content delivery network caches the files at edge locations near each visitor." },
+        { part: { id: "ec2", icon: "server", label: "Virtual server", tag: "EC2 instance" }, why: "A server still sits in one place, so distant visitors are no closer to the files." },
+        { part: { id: "rds", icon: "database", label: "Relational database", tag: "RDS" }, why: "A database stores rows for an application. It doesn't move files nearer to anyone." },
+        { part: { id: "iam", icon: "policy", label: "Access policy", tag: "IAM" }, why: "A policy controls who may read the files. It has no effect on how far away they are." },
+      ],
+      explanation: "The bucket stays where it is. CloudFront sits in front of it and answers from whichever edge location is nearest.",
+      source: R53_CLOUDFRONT,
+      domains: ["clf-3", "saa-3"],
+      pillars: ["performance-efficiency"],
+    },
+    {
+      type: "match",
+      id: "cdn-vocabulary",
+      concept: "cdn-edge",
+      prompt: "Match each CloudFront term to what it means.",
+      pairs: [
+        { left: "Origin", right: "Where CloudFront fetches the original files from", why: "The origin is the source of truth, such as your S3 bucket." },
+        { left: "Edge location", right: "A site near visitors that caches files and serves them", why: "Edge locations are the points of presence that answer visitors directly." },
+        { left: "Distribution", right: "The settings that tell CloudFront what to serve, and how", why: "You create a distribution and tell it your origin and your rules, and it gets its own domain name." },
+        { left: "Cache", right: "Copies kept so the next request needn't reach the origin", why: "The cache is what lets an edge location answer without going back to the origin." },
+      ],
+      explanation: "You create a distribution, point it at an origin, and CloudFront caches what visitors ask for at its edge locations.",
+      source: R53_CLOUDFRONT,
+      domains: ["clf-3"],
+      pillars: [],
+    },
+    {
+      type: "card",
+      id: "card-https",
+      concept: "cdn-https",
+      title: "CloudFront speaks HTTPS for you",
+      body: "Visitors connect to CloudFront, not to the bucket, and CloudFront answers over HTTPS using a certificate it provides for its own domain name. A setting called the viewer protocol policy decides what happens to plain HTTP requests.",
+      diagram: [
+        { id: "visitor", icon: "visitor", label: "Visitor", tag: "https://" },
+        { id: "cloudfront", icon: "cdn", label: "CloudFront", tag: "d111111abcdef8.cloudfront.net" },
+        { id: "bucket", icon: "bucket", label: "my-site", tag: "origin" },
+      ],
+    },
+    {
+      type: "choice",
+      id: "redirect-policy",
+      concept: "cdn-https",
+      prompt: "The viewer protocol policy is set to Redirect HTTP to HTTPS. A visitor types the address starting with http://. What happens?",
+      options: [
+        { id: "redirect", text: "CloudFront replies with a redirect to the HTTPS address, and the browser asks again", correct: true, why: "The browser is sent a 301 with the HTTPS URL and repeats the request securely." },
+        { id: "plain", text: "The page is served over plain HTTP", why: "That is what allowing both protocols would do. This policy moves every HTTP request to HTTPS." },
+        { id: "refuse", text: "The request is refused with a 403", why: "Refusing HTTP outright is the HTTPS only policy. This one redirects." },
+        { id: "silent", text: "The same connection is quietly switched to HTTPS", why: "A connection can't change protocol midway. The browser has to make a second, secure request." },
+      ],
+      explanation: "This policy keeps old http:// links working while making sure the page itself always travels encrypted.",
+      source: CF_VIEWER_HTTPS,
+      domains: ["clf-2", "saa-1"],
+      pillars: ["security"],
+    },
+    {
+      type: "match",
+      id: "viewer-policies",
+      concept: "cdn-https",
+      prompt: "Match each viewer protocol policy to what a visitor on plain HTTP gets.",
+      pairs: [
+        { left: "Redirect HTTP to HTTPS", right: "A redirect to the HTTPS address", why: "This policy accepts the HTTP request only long enough to send the browser to HTTPS." },
+        { left: "HTTPS only", right: "A 403, and no file", why: "This policy refuses anything that doesn't arrive over HTTPS." },
+        { left: "HTTP and HTTPS", right: "The file, over plain HTTP", why: "This policy serves whichever protocol the visitor used." },
+      ],
+      explanation: "Redirecting is the usual choice for a website, because it is safe without breaking anyone's old links.",
+      source: CF_VIEWER_HTTPS,
+      domains: ["clf-2", "saa-1"],
+      pillars: ["security"],
+    },
+    {
+      type: "card",
+      id: "card-oac",
+      concept: "cdn-oac",
+      title: "Only the front door opens the bucket",
+      body: "With origin access control, the bucket's policy lets your CloudFront distribution read the files and nobody else. The bucket stays private, and Block Public Access stays on.",
+      diagram: [
+        { id: "visitor", icon: "visitor", label: "Visitor", tag: "https://" },
+        { id: "cloudfront", icon: "cdn", label: "CloudFront", tag: "origin access control" },
+        { id: "bucket", icon: "bucket", label: "my-site", tag: "private" },
+      ],
+    },
+    {
+      type: "choice",
+      id: "direct-to-bucket",
+      concept: "cdn-oac",
+      prompt: "Origin access control is set up. A curious visitor works out the bucket's own S3 address and requests index.html from it directly. What do they get?",
+      options: [
+        { id: "denied", text: "Access denied", correct: true, why: "The bucket policy allows your distribution and no one else, so a direct request is refused." },
+        { id: "page", text: "The page, exactly as CloudFront would serve it", why: "That would mean the bucket was public. With origin access control it stays private." },
+        { id: "bounce", text: "A redirect to the CloudFront address", why: "S3 doesn't know or care that CloudFront exists. It simply refuses a request it hasn't been told to allow." },
+        { id: "stale", text: "An older, uncached copy of the page", why: "There is only one copy in the bucket, and the visitor isn't allowed to read it." },
+      ],
+      explanation: "Every visitor has to come through CloudFront, so your HTTPS and caching rules can't be sidestepped.",
+      source: CF_OAC,
+      domains: ["clf-2", "saa-1"],
+      pillars: ["security"],
+    },
+    {
+      type: "choice",
+      id: "who-the-policy-names",
+      concept: "cdn-oac",
+      prompt: "For origin access control to work, who does the bucket policy give read access to?",
+      options: [
+        { id: "service", text: "The CloudFront service, and only when it acts for your distribution", correct: true, why: "The policy names CloudFront, with a condition that pins it to your one distribution." },
+        { id: "everyone", text: "Everyone", why: "That is the public bucket from the last lesson. Origin access control exists so you don't need it." },
+        { id: "visitors", text: "The IP addresses of your visitors", why: "You can't list the world's addresses, and visitors never contact the bucket anyway." },
+        { id: "you", text: "Your own AWS user", why: "You already have access as the owner. It is CloudFront that needs to be let in." },
+      ],
+      explanation: "Without the condition, any CloudFront distribution, including a stranger's, could read your bucket. The condition closes that gap.",
+      source: CF_OAC,
+      domains: ["clf-2", "saa-1"],
+      pillars: ["security"],
+    },
+    {
+      type: "fix",
+      id: "oac-needs-plain-bucket",
+      concept: "cdn-oac",
+      prompt: "A team wants CloudFront in front of a private bucket, using origin access control. One part of this design won't work with it. Find it, then choose what to use.",
+      diagram: [
+        { id: "visitor", icon: "visitor", label: "Visitor", tag: "https://" },
+        { id: "cloudfront", icon: "cdn", label: "CloudFront", tag: "origin access control" },
+        { id: "origin", icon: "bucket", label: "my-site", tag: "website endpoint" },
+      ],
+      faulty: "origin",
+      innocent: {
+        visitor: "A visitor arriving over HTTPS is exactly what CloudFront is there to handle.",
+        cloudfront: "Origin access control on the distribution is the right tool for keeping a bucket private.",
+      },
+      replacements: [
+        { id: "plain", text: "The bucket itself, as a regular S3 origin", correct: true, why: "Origin access control works with a regular bucket origin, which can stay fully private." },
+        { id: "public", text: "The website endpoint, with Block Public Access turned off", why: "That can be made to work, but only by making the bucket public, which is what the team wanted to avoid." },
+        { id: "second", text: "A second CloudFront distribution", why: "Another distribution doesn't help. The trouble is the kind of origin, not the number of front doors." },
+      ],
+      explanation: "A website endpoint only serves publicly readable content, so it can't be locked to CloudFront. Use the regular bucket as the origin.",
+      source: CF_OAC,
+      domains: ["clf-2", "saa-1"],
+      pillars: ["security"],
+    },
+  ],
+};

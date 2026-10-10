@@ -132,7 +132,7 @@ Starts from a dark, crisp, engineering look (mono type, restrained colour). No g
 ## Build order
 
 1. **Throwaway canvas prototype.** Done, in `app/prototype/canvas`. Snap to zones won, and plain rules judged it fairly.
-2. **Lesson engine and the on-ramp unit**, deployed to Vercel. The visual direction is settled here. *In progress: the engine and lesson 1 are built; lessons 2 and 3 follow once lesson 1 has been reviewed. Not yet deployed.*
+2. **Lesson engine and the on-ramp unit**, deployed to Vercel. The visual direction is settled here. *The engine and all three on-ramp lessons are built and awaiting content review. Not yet deployed.*
 3. **Main unit lessons**, drafted and reviewed one at a time.
 4. **The real capstone canvas**, built with what the prototype taught.
 5. **Progress view**: mastery, streak, review queue, coverage overlay.
