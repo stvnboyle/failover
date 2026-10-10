@@ -38,12 +38,14 @@ export function Path({ units }: { units: Unit[] }) {
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-6">
       <header className="flex items-center justify-between py-5 text-xs">
         <span className="text-zinc-200">failover</span>
-        <span className="text-zinc-500">desktop preview</span>
+        <Link href="/coverage" className="text-zinc-500 transition-colors hover:text-zinc-100">
+          ./exam-coverage
+        </Link>
       </header>
 
       <main className="flex flex-1 flex-col gap-14 py-10">
         <section>
-          <h1 className="text-[32px] leading-tight text-zinc-50">
+          <h1 className="text-[32px] leading-tight text-zinc-100">
             Learn how AWS fits together, <span className="text-emerald-400">by building it.</span>
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-zinc-400">
@@ -52,105 +54,119 @@ export function Path({ units }: { units: Unit[] }) {
           </p>
         </section>
 
-        {units.map((unit, u) => (
-          <section key={unit.id}>
-            <p className="text-[11px] text-zinc-500">
-              {"// unit "}
-              {String(u + 1).padStart(2, "0")}
-            </p>
-            <h2 className="mt-2 text-lg text-zinc-100">{unit.title}</h2>
-            <p className="mt-1 text-sm leading-relaxed text-zinc-500">{unit.scenario}</p>
+        {units.map((unit, u) => {
+          const written = unit.lessons.flatMap(exercisesIn);
+          const got = written.filter((e) => known.has(e.id)).length;
+          return (
+            <section key={unit.id}>
+              <div className="flex items-baseline justify-between text-[11px] text-zinc-500">
+                <p>
+                  {"// unit "}
+                  {String(u + 1).padStart(2, "0")}
+                </p>
+                {written.length > 0 && (
+                  <p>
+                    <span className={got > 0 ? "text-emerald-300" : ""}>{got}</span>/{written.length} exercises
+                  </p>
+                )}
+              </div>
+              <h2 className="mt-2 text-lg text-zinc-100">{unit.title}</h2>
+              <p className="mt-1 text-sm leading-relaxed text-zinc-500">{unit.scenario}</p>
 
-            <ol className="mt-6">
-              {[...unit.lessons, ...(unit.capstone ? [null] : [])].map((lesson, i, all) => {
-                const last = i === all.length - 1;
-                const written = lesson ? lesson.steps.length > 0 : Boolean(unit.capstone?.href);
-                const done = lesson ? isDone(lesson) : false;
-                const current = lesson !== null && lesson === nextUp;
-                const href = lesson ? `/learn/${unit.id}/${lesson.id}` : unit.capstone?.href;
-                const title = lesson ? lesson.title : unit.capstone!.title;
+              <ol className="mt-6">
+                {[...unit.lessons, ...(unit.capstone ? [null] : [])].map((lesson, i, all) => {
+                  const last = i === all.length - 1;
+                  const open = lesson ? lesson.steps.length > 0 : Boolean(unit.capstone?.href);
+                  const done = lesson ? isDone(lesson) : false;
+                  const current = lesson !== null && lesson === nextUp;
+                  const href = lesson ? `/learn/${unit.id}/${lesson.id}` : unit.capstone?.href;
+                  const title = lesson ? lesson.title : unit.capstone!.title;
 
-                const body = (
-                  <div
-                    className={`flex items-center gap-4 rounded-md border px-4 py-3 transition-colors ${
-                      current
-                        ? "border-emerald-400/50 bg-emerald-400/[0.04]"
-                        : written
-                          ? "border-zinc-800 group-hover:border-zinc-600"
-                          : "border-transparent"
-                    }`}
-                  >
-                    <span className="w-6 text-xs text-zinc-600">{lesson ? String(i + 1).padStart(2, "0") : "◆"}</span>
-                    <span className="min-w-0 flex-1">
-                      <span className={`block text-sm ${written ? "text-zinc-100" : "text-zinc-500"}`}>{title}</span>
-                      <span className="mt-0.5 block truncate text-xs text-zinc-500">
-                        {lesson ? lesson.summary : "Place and connect the services yourself, then try to break it."}
-                      </span>
-                    </span>
-                    <span className="shrink-0 text-right text-[11px]">
-                      {!written ? (
-                        <span className="text-zinc-600">not written yet</span>
-                      ) : !lesson ? (
-                        <span className="text-amber-400">prototype →</span>
-                      ) : done ? (
-                        <span className="text-emerald-400">✓ done</span>
-                      ) : current ? (
-                        <span className="text-emerald-300">{doneCount(lesson) > 0 ? "continue" : "start here"} →</span>
-                      ) : (
-                        <span className="text-zinc-400">open →</span>
-                      )}
-                      {lesson && written && (
-                        <span className="mt-0.5 block text-zinc-600">
-                          {doneCount(lesson)}/{exercisesIn(lesson).length} · {ideasIn(lesson)} ideas
+                  const body = (
+                    <div
+                      className={`flex items-center gap-4 rounded-xl border px-4 py-3 transition-colors ${
+                        current
+                          ? "border-emerald-400/50 bg-emerald-400/[0.05]"
+                          : open
+                            ? "border-zinc-800 bg-zinc-900/50 group-hover:border-zinc-600"
+                            : "border-transparent"
+                      }`}
+                    >
+                      <span className="min-w-0 flex-1">
+                        <span className={`block text-sm ${open ? "text-zinc-100" : "text-zinc-500"}`}>{title}</span>
+                        <span className="mt-0.5 block truncate text-xs text-zinc-500">
+                          {lesson ? lesson.summary : "Place and connect the services yourself, then try to break it."}
                         </span>
-                      )}
-                    </span>
-                  </div>
-                );
+                      </span>
+                      <span className="shrink-0 text-right text-[11px]">
+                        {!open ? (
+                          <span className="text-zinc-600">not written yet</span>
+                        ) : !lesson ? (
+                          <span className="text-amber-300">prototype →</span>
+                        ) : current ? (
+                          <span className="keycap inline-block rounded-lg border border-emerald-600 bg-emerald-400 px-3 py-1.5 text-emerald-950">
+                            {doneCount(lesson) > 0 ? "continue" : "start"} →
+                          </span>
+                        ) : (
+                          <>
+                            <span className={done ? "text-emerald-300" : "text-zinc-400"}>
+                              {done ? "done · again →" : "open →"}
+                            </span>
+                            <span className="mt-0.5 block text-zinc-600">
+                              {doneCount(lesson)}/{exercisesIn(lesson).length} · {ideasIn(lesson)} ideas
+                            </span>
+                          </>
+                        )}
+                      </span>
+                    </div>
+                  );
 
-                return (
-                  <li key={lesson?.id ?? "capstone"} className="flex gap-4">
-                    {/* The rail: a dot per stop, joined by a line, like a commit graph. */}
-                    <div className="flex w-3 flex-col items-center">
-                      <span className={`h-5 w-px ${i === 0 ? "bg-transparent" : "bg-zinc-800"}`} />
-                      <span
-                        className={`size-2.5 shrink-0 rounded-full border ${
-                          done
-                            ? "border-emerald-400 bg-emerald-400"
-                            : current
-                              ? "border-emerald-400"
-                              : written
-                                ? "border-zinc-500"
-                                : "border-zinc-800"
-                        }`}
-                      />
-                      <span className={`w-px flex-1 ${last ? "bg-transparent" : "bg-zinc-800"}`} />
-                    </div>
-                    <div className="min-w-0 flex-1 py-1">
-                      {written && href ? (
-                        <Link href={href} className="group block">
-                          {body}
-                        </Link>
-                      ) : (
-                        body
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
-          </section>
-        ))}
+                  return (
+                    <li key={lesson?.id ?? "capstone"} className="flex gap-4">
+                      {/* The rail: a station per stop, joined by a line, like a commit graph. */}
+                      <div className="flex w-8 flex-col items-center">
+                        <span className={`h-3 w-px ${i === 0 ? "bg-transparent" : "bg-zinc-800"}`} />
+                        <span
+                          className={`grid size-8 shrink-0 place-items-center rounded-lg border border-b-[3px] text-[11px] transition-colors ${
+                            done
+                              ? "border-emerald-600 bg-emerald-400 text-emerald-950"
+                              : current
+                                ? "border-emerald-400 bg-emerald-400/10 text-emerald-300"
+                                : open
+                                  ? "border-zinc-600 bg-zinc-900 text-zinc-300"
+                                  : "border-zinc-800 text-zinc-600"
+                          }`}
+                        >
+                          {done ? "✓" : lesson ? String(i + 1).padStart(2, "0") : "◆"}
+                        </span>
+                        <span className={`w-px flex-1 ${last ? "bg-transparent" : "bg-zinc-800"}`} />
+                      </div>
+                      <div className="min-w-0 flex-1 py-1">
+                        {open && href ? (
+                          <Link href={href} className="group block">
+                            {body}
+                          </Link>
+                        ) : (
+                          body
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
+              </ol>
+            </section>
+          );
+        })}
       </main>
 
-      <footer className="flex flex-col gap-3 border-t border-zinc-800/80 py-6 text-[11px] leading-relaxed text-zinc-500">
+      <footer className="flex flex-col gap-3 border-t border-zinc-800 py-6 text-[11px] leading-relaxed text-zinc-500">
         <p>
           Progress is saved in this browser only, with no account. Clearing your browser&apos;s site data removes it, so
           keep a copy if it matters:{" "}
-          <button onClick={download} className="text-zinc-300 transition-colors hover:text-white">
+          <button onClick={download} className="text-zinc-300 transition-colors hover:text-zinc-50">
             ./export
           </button>{" "}
-          <button onClick={() => file.current?.click()} className="text-zinc-300 transition-colors hover:text-white">
+          <button onClick={() => file.current?.click()} className="text-zinc-300 transition-colors hover:text-zinc-50">
             ./import
           </button>
           <input

@@ -150,7 +150,7 @@ export const ZONE_META: Record<Zone, { label: string; cidr: string; tone: "publi
 export const ZONE_TONE = {
   public: { box: "border-emerald-500/25 bg-emerald-500/[0.035]", text: "text-emerald-400/80" },
   private: { box: "border-sky-500/25 bg-sky-500/[0.035]", text: "text-sky-400/80" },
-  span: { box: "border-dashed border-violet-400/50 bg-[#0c0c10]", text: "text-violet-300/80" },
+  span: { box: "border-dashed border-violet-400/50 bg-[var(--color-board)]", text: "text-violet-300/80" },
 };
 
 export function ZoneLabel({ id }: { id: Zone }) {
@@ -168,8 +168,8 @@ export const OFFLINE_HATCH: CSSProperties = {
 };
 
 export const DOT_GRID: CSSProperties = {
-  backgroundColor: "#0c0c10",
-  backgroundImage: "radial-gradient(#26262c 1px, transparent 1px)",
+  backgroundColor: "var(--color-board)",
+  backgroundImage: "radial-gradient(var(--color-grid) 1px, transparent 1px)",
   backgroundSize: "24px 24px",
 };
 
@@ -338,7 +338,7 @@ export function Shell({
   ];
 
   return (
-    <div className="flex h-screen flex-col bg-[#09090b] font-mono text-zinc-300">
+    <div className="flex h-screen flex-col bg-[var(--color-page)] font-mono text-zinc-300">
       <header className="flex items-center gap-4 border-b border-zinc-800/80 px-5 py-3 text-xs">
         <span className="text-zinc-500">
           failover <span className="text-zinc-700">/</span> web-app <span className="text-zinc-700">/</span>{" "}

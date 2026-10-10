@@ -88,6 +88,10 @@ Learning-first. Progress is expressed as mastery and coverage, not points.
 - A timed mock exam (needs a full cert's worth of content first).
 - A "test out of this unit" feature.
 
+### Exam readiness
+
+The product must not claim to make anyone exam-ready until the written content covers a full blueprint. Until then it is positioned as a way to understand how AWS fits together and as a companion to exam study, and the coverage view says so in plain words.
+
 ### Navigation
 
 Nothing is locked. The path highlights one recommended next step. Opening the capstone early shows which concepts it relies on and which the learner hasn't covered, then lets them proceed.
@@ -127,15 +131,24 @@ Content lives as typed data files in the repository, validated against a schema 
 
 ### Visual direction
 
-Starts from a dark, crisp, engineering look (mono type, restrained colour). No gamified styling or over-the-top effects. To be revisited when the lesson engine exists and there is something to look at.
+A dark, crisp, engineering look in mono type, made more playful after the first build:
+
+- **Soft contrast.** Nothing is pure black or pure white. The neutral scale is remapped in `app/globals.css` to a blue-tinted charcoal page with soft grey text, because bright white on black was tiring to read.
+- **Keycaps.** Anything pressable has a thick bottom edge and sinks when pushed, like a mechanical keyboard key.
+- **Colour per move.** Each kind of step has its own accent colour, and the primary action is green.
+- Still no mascots, confetti, glows or other over-the-top effects.
 
 ## Build order
 
+Reordered on 2026-10-11 to bring Solutions Architect material and the coverage view forward.
+
 1. **Throwaway canvas prototype.** Done, in `app/prototype/canvas`. Snap to zones won, and plain rules judged it fairly.
-2. **Lesson engine and the on-ramp unit**, deployed to Vercel. The visual direction is settled here. *The engine and all three on-ramp lessons are built and awaiting content review. Not yet deployed.*
-3. **Main unit lessons**, drafted and reviewed one at a time.
-4. **The real capstone canvas**, built with what the prototype taught.
-5. **Progress view**: mastery, streak, review queue, coverage overlay.
+2. **Lesson engine and the on-ramp unit.** Done: the engine and all three on-ramp lessons are built and awaiting content review. Not yet deployed.
+3. **Coverage view.** A first version is built at `/coverage`: per exam domain, how many written exercises have been answered correctly. It still needs mastery levels and a way to show how much of each domain is unwritten.
+4. **Main unit lessons**, drafted and reviewed one at a time. This unit carries most of the Solutions Architect weight, so it comes next.
+5. **The real capstone canvas**, built with what the prototype taught.
+6. **The rest of the progress view**: mastery, streak, review queue.
+7. **Deploy to Vercel**, when asked.
 
 ## Open questions
 

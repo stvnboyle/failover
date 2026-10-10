@@ -25,17 +25,17 @@ const ICON: Record<Part["icon"], { color: string; glyph: ReactNode }> = {
 export type PartState = "plain" | "selected" | "right" | "wrong" | "dim";
 
 const BORDER: Record<PartState, string> = {
-  plain: "border-zinc-700/80",
-  selected: "border-zinc-200",
-  right: "border-emerald-400/70",
-  wrong: "border-red-400/70",
+  plain: "border-zinc-700",
+  selected: "border-orange-400",
+  right: "border-emerald-500",
+  wrong: "border-red-400",
   dim: "border-zinc-800 opacity-50",
 };
 
 export function PartCard({ part, state = "plain" }: { part: Part; state?: PartState }) {
   const { color, glyph } = ICON[part.icon];
   return (
-    <div className={`w-52 rounded-md border bg-zinc-900 text-left transition-colors duration-300 ${BORDER[state]}`}>
+    <div className={`w-52 rounded-lg border bg-zinc-900 text-left transition-colors duration-300 ${BORDER[state]}`}>
       <div className="flex h-11 items-center gap-2.5 px-2.5">
         <span
           className="grid size-6 shrink-0 place-items-center rounded"
@@ -71,12 +71,12 @@ const Wire = () => (
 /** A diagram: parts in a row, joined by arrows. A `null` entry is an empty slot. */
 export function Chain({ children }: { children: ReactNode[] }) {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-3 rounded-lg border border-zinc-800 bg-[#0c0c10] bg-[radial-gradient(#26262c_1px,transparent_1px)] [background-size:24px_24px] px-6 py-8">
+    <div className="flex flex-wrap items-center justify-center gap-3 rounded-xl border border-zinc-800 bg-[var(--color-board)] bg-[radial-gradient(var(--color-grid)_1px,transparent_1px)] [background-size:24px_24px] px-6 py-8">
       {children.flatMap((child, i) => (i === 0 ? [child] : [<Wire key={`wire-${i}`} />, child]))}
     </div>
   );
 }
 
 export const Gap = () => (
-  <div className="grid h-11 w-52 place-items-center rounded-md border border-dashed border-zinc-500 text-xs text-zinc-500">?</div>
+  <div className="grid h-11 w-52 place-items-center rounded-lg border border-dashed border-orange-400/60 text-xs text-orange-300">?</div>
 );

@@ -43,12 +43,12 @@ function useNumberKeys(count: number, enabled: boolean, pick: (index: number) =>
 }
 
 const optionClass = (state: "plain" | "selected" | "right" | "wrong" | "dim") =>
-  `flex w-full items-start gap-3 rounded-md border px-3.5 py-3 text-left text-sm leading-snug transition-colors duration-300 ${
+  `keycap flex w-full items-start gap-3 rounded-xl border bg-zinc-900 px-4 py-3 text-left text-sm leading-snug ${
     {
-      plain: "border-zinc-700/80 text-zinc-300 hover:border-zinc-500 hover:text-zinc-100",
-      selected: "border-zinc-200 text-zinc-50",
-      right: "border-emerald-400/70 bg-emerald-400/[0.06] text-zinc-50",
-      wrong: "border-red-400/70 bg-red-400/[0.06] text-zinc-50",
+      plain: "border-zinc-700 text-zinc-300 hover:border-zinc-500 hover:text-zinc-100",
+      selected: "border-violet-400 bg-violet-400/10 text-zinc-100",
+      right: "border-emerald-500 bg-emerald-400/10 text-zinc-100",
+      wrong: "border-red-400 bg-red-400/10 text-zinc-100",
       dim: "border-zinc-800 text-zinc-500",
     }[state]
   }`;
@@ -83,8 +83,8 @@ function Options<T extends { id: string; text: string; correct?: true; why: stri
               : "dim";
         return (
           <button key={o.id} disabled={locked} onClick={() => pick(o)} className={optionClass(state)}>
-            <span className="mt-px grid size-5 shrink-0 place-items-center rounded-sm border border-current text-[10px] opacity-60">
-              {i + 1}
+            <span className="mt-px grid size-5 shrink-0 place-items-center rounded-md border border-current text-[10px] opacity-60">
+              {state === "right" ? "✓" : state === "wrong" ? "✗" : i + 1}
             </span>
             {o.text}
           </button>
@@ -209,12 +209,12 @@ function MatchExercise({ exercise, locked, onAnswer }: Props<Match>) {
   };
 
   const cell = (state: "plain" | "selected" | "right" | "wrong") =>
-    `w-full rounded-md border px-3.5 py-3 text-left text-sm leading-snug transition-colors duration-300 ${
+    `keycap w-full rounded-xl border bg-zinc-900 px-4 py-3 text-left text-sm leading-snug ${
       {
-        plain: "border-zinc-700/80 text-zinc-300 enabled:hover:border-zinc-500 enabled:hover:text-zinc-100",
-        selected: "border-zinc-200 text-zinc-50",
-        right: "border-emerald-400/40 bg-emerald-400/[0.05] text-zinc-400",
-        wrong: "nudge border-red-400/70 text-zinc-50",
+        plain: "border-zinc-700 text-zinc-300 enabled:hover:border-zinc-500 enabled:hover:text-zinc-100",
+        selected: "border-sky-400 bg-sky-400/10 text-zinc-100",
+        right: "border-emerald-500/60 bg-emerald-400/[0.07] text-zinc-400",
+        wrong: "nudge border-red-400 bg-red-400/10 text-zinc-100",
       }[state]
     }`;
 

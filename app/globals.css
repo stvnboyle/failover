@@ -5,10 +5,53 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/*
+ * The neutral scale, remapped. Stock zinc runs from near-black to near-white, which is harsh
+ * to read for long: bright text on a black page. This version lifts the darks to a blue-tinted
+ * charcoal and pulls the lights down to a soft grey, so nothing on screen is pure black or white.
+ */
+@theme {
+  --color-zinc-50: #dfe3ea;
+  --color-zinc-100: #d3d8e1;
+  --color-zinc-200: #c2c8d3;
+  --color-zinc-300: #a9b0bd;
+  --color-zinc-400: #8d94a3;
+  --color-zinc-500: #767d8d;
+  --color-zinc-600: #5a6070;
+  --color-zinc-700: #3c414e;
+  --color-zinc-800: #2b2f3a;
+  --color-zinc-900: #1e2129;
+  --color-zinc-950: #171a21;
+
+  /* The page itself, and the slightly raised surface diagrams sit on. */
+  --color-page: #14161c;
+  --color-board: #181b22;
+  --color-grid: #2a2e39;
+}
+
 body {
-  background: #09090b;
-  color: #d4d4d8;
+  background: var(--color-page);
+  color: var(--color-zinc-300);
   font-family: var(--font-geist-mono), ui-monospace, monospace;
+}
+
+/*
+ * Keycaps: anything you press has a thick bottom edge and sinks when pushed, like a key on a
+ * mechanical keyboard. It is the one deliberately tactile thing in the interface.
+ */
+.keycap {
+  border-bottom-width: 4px;
+  transition:
+    transform 90ms ease-out,
+    border-bottom-width 90ms ease-out,
+    border-color 300ms,
+    background-color 300ms,
+    color 300ms;
+}
+.keycap:active:not(:disabled),
+.keycap[data-pressed="true"] {
+  transform: translateY(2px);
+  border-bottom-width: 2px;
 }
 
 /* Shared motion. Slow and crisp: no glows, no bounces. */
@@ -24,11 +67,12 @@ body {
 
 @keyframes pop-in {
   from {
+    opacity: 0;
     transform: scale(0.5);
   }
 }
 .pop-in {
-  animation: pop-in 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: pop-in 300ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
 @keyframes nudge {
@@ -49,5 +93,7 @@ body {
   .nudge {
     animation: none;
   }
+  .keycap {
+    transition: none;
+  }
 }
-
