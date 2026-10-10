@@ -1,0 +1,18 @@
+import type { Unit } from "@/content/schema";
+
+const planned = (id: string, title: string, summary: string) => ({ id, title, summary, steps: [] });
+
+export const webApp: Unit = {
+  id: "web-app",
+  title: "Run a web app that survives a data-centre failure",
+  scenario: "The site now has a server and a database. Keep it serving when a whole data centre goes dark.",
+  lessons: [
+    planned("regions", "Regions and Availability Zones", "Where AWS physically is, and why that matters."),
+    planned("vpc", "VPCs and subnets", "Your own network, and the difference between public and private."),
+    planned("servers", "Servers and security groups", "Virtual machines and who is allowed to talk to them."),
+    planned("load-balancing", "Load balancing", "One front door, many servers behind it."),
+    planned("auto-scaling", "Auto scaling", "Replacing servers that fail and adding more under load."),
+    planned("database", "A database that fails over", "A primary, a standby, and what happens when one is lost."),
+  ],
+  capstone: { title: "Build it yourself", href: "/prototype/canvas" },
+};

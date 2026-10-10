@@ -1,0 +1,163 @@
+/* PROTOTYPE — throwaway. Motion for the capstone canvas. Slow and crisp: no glows, no bounces. */
+
+/* A service landing in a zone: it settles into place while its outline is traced in its own colour. */
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.97);
+  }
+}
+.card-in {
+  animation: card-in 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes trace {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  60% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+.trace rect {
+  fill: none;
+  stroke-width: 1.5;
+  stroke-dasharray: 1;
+  animation: trace 1200ms ease-out both;
+}
+
+/* The zone acknowledging the drop: its border lights once, then fades. */
+@keyframes zone-ack {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+.zone-ack {
+  animation: zone-ack 1000ms ease-out both;
+}
+
+/* A new connection drawing itself from one service to the other. */
+@keyframes wire-in {
+  0% {
+    stroke-dashoffset: 1;
+    opacity: 1;
+  }
+  70% {
+    stroke-dashoffset: 0;
+    opacity: 1;
+  }
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+.wire-in {
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
+  animation: wire-in 900ms ease-out both;
+}
+
+/*
+ * The heartbeat, once every requirement passes. One 4.8s cycle is shared by everything:
+ * a pulse runs down each wire, staggered by depth so it reads as one wave from the users
+ * to the database, and each service's status dot beats as the wave reaches it.
+ */
+@keyframes wire-beat {
+  0% {
+    stroke-dashoffset: 0.3;
+  }
+  22%,
+  100% {
+    stroke-dashoffset: -1;
+  }
+}
+.wire-beat {
+  fill: none;
+  stroke: #6ee7b7;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 0.3 1;
+  stroke-dashoffset: 0.3;
+  animation: wire-beat 4.8s linear infinite;
+}
+
+@keyframes wire-breathe {
+  0%,
+  100% {
+    stroke-opacity: 0.35;
+  }
+  50% {
+    stroke-opacity: 0.8;
+  }
+}
+.wire-breathe {
+  animation: wire-breathe 4.8s ease-in-out infinite;
+}
+
+@keyframes dot-beat {
+  0%,
+  14%,
+  100% {
+    transform: scale(1);
+  }
+  6% {
+    transform: scale(2.2);
+  }
+}
+.dot-beat {
+  animation: dot-beat 4.8s ease-out infinite;
+}
+
+/* The status line swapping to a new message. */
+@keyframes status-in {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+.status-in {
+  animation: status-in 400ms ease-out both;
+}
+
+/* A requirement turning green. */
+@keyframes check-pop {
+  from {
+    transform: scale(0.5);
+  }
+}
+.check-pop {
+  animation: check-pop 260ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-in,
+  .check-pop {
+    animation: none;
+  }
+  .card-in,
+  .trace rect,
+  .zone-ack,
+  .wire-in,
+  .wire-beat,
+  .wire-breathe,
+  .dot-beat {
+    animation: none;
+  }
+  .trace,
+  .zone-ack,
+  .wire-in,
+  .wire-beat {
+    display: none;
+  }
+}
