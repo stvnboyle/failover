@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Chain, PartCard } from "@/components/diagram";
 import type { Lesson, Step } from "@/content/schema";
 import { record } from "@/lib/progress";
+import { useKeydown } from "@/lib/use-keydown";
 import { ExerciseView, type Answer } from "./exercises";
 
 // Each kind of step has its own colour, so a lesson reads as a sequence of different moves.
@@ -24,11 +25,9 @@ const KEY_RETRY = "border-amber-600 bg-amber-400 text-amber-950 hover:bg-amber-3
 const KEY_OFF = "border-zinc-800 bg-zinc-900 text-zinc-600";
 
 export function Player({
-  unitTitle,
   lesson,
   next,
 }: {
-  unitTitle: string;
   lesson: Lesson;
   next: { href: string; title: string } | null;
 }) {
@@ -47,15 +46,15 @@ export function Player({
     if (!step || step.type === "card") return;
     setChecked(true);
     record(step.id, given.correct);
-    if (!given.correct && !missed.includes(step.id)) setMissed([...missed, step.id]);
+    if (!given.correct) setMissed((ids) => (ids.includes(step.id) ? ids : [...ids, step.id]));
   };
 
   const advance = () => {
     if (!step) return;
     const wrong = step.type !== "card" && !answer?.correct;
-    if (wrong) setQueue([...queue, step]);
-    else setCleared(cleared + 1);
-    setAt(at + 1);
+    if (wrong) setQueue((q) => [...q, step]);
+    else setCleared((n) => n + 1);
+    setAt((n) => n + 1);
     setAnswer(null);
     setChecked(false);
   };
@@ -67,14 +66,10 @@ export function Player({
     else if (answer) check(answer);
   };
 
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== "Enter") return;
-      e.preventDefault();
-      proceed();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+  useKeydown((e) => {
+    if (e.key !== "Enter") return;
+    e.preventDefault();
+    proceed();
   });
 
   const good = checked && answer?.correct;
@@ -82,52 +77,50 @@ export function Player({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="flex items-center gap-5 border-b border-zinc-800 px-5 py-3 text-xs">
-        <span className="truncate text-zinc-500">
-          <Link href="/" className="transition-colors hover:text-zinc-200">
-            failover
-          </Link>{" "}
-          <span className="text-zinc-700">/</span> {unitTitle} <span className="text-zinc-700">/</span>{" "}
-          <span className="text-zinc-200">{lesson.title}</span>
-        </span>
-        <div className="ml-auto flex shrink-0 items-center gap-3">
-          <div
-            className="h-2 w-64 overflow-hidden rounded-full bg-zinc-800"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={lesson.steps.length}
-            aria-valuenow={cleared}
-          >
-            <div
-              className="h-full rounded-full bg-emerald-400 transition-[width] duration-700 ease-out"
-              style={{ width: `${(cleared / lesson.steps.length) * 100}%` }}
-            />
-          </div>
-          <span className="w-10 text-zinc-400">
-            {cleared}/{lesson.steps.length}
-          </span>
-        </div>
-        <Link href="/" className="shrink-0 text-zinc-500 transition-colors hover:text-zinc-100">
-          ./exit
+      <header className="flex items-center gap-4 border-b border-zinc-800 px-5 py-3">
+        <Link
+          href="/"
+          aria-label="Leave this lesson"
+          className="grid size-8 shrink-0 place-items-center rounded-lg text-zinc-500 transition-colors hover:bg-zinc-900 hover:text-zinc-100"
+        >
+          ✕
         </Link>
+        <div
+          className="mx-auto h-2.5 w-full max-w-3xl overflow-hidden rounded-full bg-zinc-800"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={lesson.steps.length}
+          aria-valuenow={cleared}
+        >
+          <div
+            className="h-full rounded-full bg-emerald-400 transition-[width] duration-700 ease-out"
+            style={{ width: `${(cleared / lesson.steps.length) * 100}%` }}
+          />
+        </div>
+        <span className="w-12 shrink-0 text-right font-mono text-xs text-zinc-400">
+          {cleared}/{lesson.steps.length}
+        </span>
       </header>
 
       {step ? (
         <>
           <main key={`${step.id}-${at}`} className="rise-in mx-auto flex w-full max-w-3xl flex-1 flex-col gap-7 px-6 py-12">
-            <p className="flex items-center gap-3 text-[11px]">
+            <p className="flex items-center gap-3 text-xs">
               <span className={`rounded-md border px-2 py-1 ${KIND[step.type].tone}`}>{KIND[step.type].label}</span>
-              {at >= lesson.steps.length && <span className="text-zinc-500">second attempt</span>}
+              <span className="text-zinc-500">
+                {lesson.title}
+                {at >= lesson.steps.length && " · second attempt"}
+              </span>
             </p>
             {step.type === "card" ? (
               <>
-                <h1 className="text-[26px] leading-snug text-zinc-100">{step.title}</h1>
+                <h1 className="text-[26px] font-semibold leading-snug text-zinc-100">{step.title}</h1>
                 <Chain>{step.diagram.map((p) => <PartCard key={p.id} part={p} />)}</Chain>
                 <p className="text-base leading-relaxed text-zinc-300">{step.body}</p>
               </>
             ) : (
               <>
-                <h1 className="text-xl leading-snug text-zinc-100">{step.prompt}</h1>
+                <h1 className="text-xl font-medium leading-snug text-zinc-100">{step.prompt}</h1>
                 <ExerciseView
                   exercise={step}
                   locked={checked}
@@ -187,12 +180,9 @@ export function Player({
         </>
       ) : (
         <main className="rise-in mx-auto flex w-full max-w-3xl flex-1 flex-col justify-center gap-8 px-6 py-12">
-          <p className="text-[11px] text-zinc-500">
-            {"// lesson complete · "}
-            {lesson.title}
-          </p>
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Lesson complete · {lesson.title}</p>
           <div>
-            <p className="text-6xl text-zinc-100">
+            <p className="text-6xl font-semibold text-zinc-100">
               {exercises.length - missed.length}
               <span className="text-zinc-600">/{exercises.length}</span>
             </p>

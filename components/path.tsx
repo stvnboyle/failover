@@ -2,21 +2,28 @@
 
 import Link from "next/link";
 import { useRef, useState } from "react";
-import type { Lesson, Unit } from "@/content/schema";
+
 import { exportSave, importSave, mastered, useProgress } from "@/lib/progress";
 
-const exercisesIn = (lesson: Lesson) => lesson.steps.filter((s) => s.type !== "card");
-const ideasIn = (lesson: Lesson) => lesson.steps.filter((s) => s.type === "card").length;
+/** The outline of the curriculum: what the path needs to draw itself, and nothing from inside the lessons. */
+export type PathLesson = { id: string; title: string; summary: string; exercises: string[]; ideas: number };
+export type PathUnit = {
+  id: string;
+  title: string;
+  scenario: string;
+  lessons: PathLesson[];
+  capstone?: { title: string; href?: string };
+};
 
-export function Path({ units }: { units: Unit[] }) {
+export function Path({ units }: { units: PathUnit[] }) {
   const known = mastered(useProgress());
   const [notice, setNotice] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
 
-  const doneCount = (lesson: Lesson) => exercisesIn(lesson).filter((e) => known.has(e.id)).length;
-  const isDone = (lesson: Lesson) => lesson.steps.length > 0 && doneCount(lesson) === exercisesIn(lesson).length;
+  const doneCount = (lesson: PathLesson) => lesson.exercises.filter((id) => known.has(id)).length;
+  const isDone = (lesson: PathLesson) => lesson.exercises.length > 0 && doneCount(lesson) === lesson.exercises.length;
   // Nothing is locked. This is only the suggestion for where to go next.
-  const nextUp = units.flatMap((u) => u.lessons).find((l) => l.steps.length > 0 && !isDone(l));
+  const nextUp = units.flatMap((u) => u.lessons).find((l) => l.exercises.length > 0 && !isDone(l));
 
   const download = () => {
     const url = URL.createObjectURL(new Blob([exportSave()], { type: "application/json" }));
@@ -37,15 +44,15 @@ export function Path({ units }: { units: Unit[] }) {
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-6">
       <header className="flex items-center justify-between py-5 text-xs">
-        <span className="text-zinc-200">failover</span>
-        <Link href="/coverage" className="text-zinc-500 transition-colors hover:text-zinc-100">
-          ./exam-coverage
+        <span className="text-base font-semibold text-zinc-100">failover</span>
+        <Link href="/coverage" className="text-zinc-400 transition-colors hover:text-zinc-100">
+          Exam coverage →
         </Link>
       </header>
 
       <main className="flex flex-1 flex-col gap-14 py-10">
         <section>
-          <h1 className="text-[32px] leading-tight text-zinc-100">
+          <h1 className="text-[34px] font-semibold leading-tight text-zinc-100">
             Learn how AWS fits together, <span className="text-emerald-400">by building it.</span>
           </h1>
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-zinc-400">
@@ -55,29 +62,26 @@ export function Path({ units }: { units: Unit[] }) {
         </section>
 
         {units.map((unit, u) => {
-          const written = unit.lessons.flatMap(exercisesIn);
-          const got = written.filter((e) => known.has(e.id)).length;
+          const written = unit.lessons.flatMap((l) => l.exercises);
+          const got = written.filter((id) => known.has(id)).length;
           return (
             <section key={unit.id}>
-              <div className="flex items-baseline justify-between text-[11px] text-zinc-500">
-                <p>
-                  {"// unit "}
-                  {String(u + 1).padStart(2, "0")}
-                </p>
+              <div className="flex items-baseline justify-between text-xs text-zinc-500">
+                <p className="font-medium uppercase tracking-widest">Unit {u + 1}</p>
                 {written.length > 0 && (
                   <p>
                     <span className={got > 0 ? "text-emerald-300" : ""}>{got}</span>/{written.length} exercises
                   </p>
                 )}
               </div>
-              <h2 className="mt-2 text-lg text-zinc-100">{unit.title}</h2>
+              <h2 className="mt-2 text-xl font-semibold text-zinc-100">{unit.title}</h2>
               <p className="mt-1 text-sm leading-relaxed text-zinc-500">{unit.scenario}</p>
 
               <ol className="mt-6">
                 {[...unit.lessons, ...(unit.capstone ? [null] : [])].map((lesson, i, all) => {
                   const last = i === all.length - 1;
-                  const open = lesson ? lesson.steps.length > 0 : Boolean(unit.capstone?.href);
-                  const done = lesson ? isDone(lesson) : false;
+                  const open = lesson ? lesson.exercises.length > 0 : Boolean(unit.capstone?.href);
+                  const done = lesson ? isDone(lesson) : known.has(`capstone:${unit.id}`);
                   const current = lesson !== null && lesson === nextUp;
                   const href = lesson ? `/learn/${unit.id}/${lesson.id}` : unit.capstone?.href;
                   const title = lesson ? lesson.title : unit.capstone!.title;
@@ -93,16 +97,16 @@ export function Path({ units }: { units: Unit[] }) {
                       }`}
                     >
                       <span className="min-w-0 flex-1">
-                        <span className={`block text-sm ${open ? "text-zinc-100" : "text-zinc-500"}`}>{title}</span>
+                        <span className={`block text-sm font-medium ${open ? "text-zinc-100" : "text-zinc-500"}`}>{title}</span>
                         <span className="mt-0.5 block truncate text-xs text-zinc-500">
                           {lesson ? lesson.summary : "Place and connect the services yourself, then try to break it."}
                         </span>
                       </span>
-                      <span className="shrink-0 text-right text-[11px]">
+                      <span className="shrink-0 text-right text-xs">
                         {!open ? (
                           <span className="text-zinc-600">not written yet</span>
                         ) : !lesson ? (
-                          <span className="text-amber-300">prototype →</span>
+                          <span className={done ? "text-emerald-300" : "text-zinc-400"}>{done ? "built · again →" : "open →"}</span>
                         ) : current ? (
                           <span className="keycap inline-block rounded-lg border border-emerald-600 bg-emerald-400 px-3 py-1.5 text-emerald-950">
                             {doneCount(lesson) > 0 ? "continue" : "start"} →
@@ -113,7 +117,7 @@ export function Path({ units }: { units: Unit[] }) {
                               {done ? "done · again →" : "open →"}
                             </span>
                             <span className="mt-0.5 block text-zinc-600">
-                              {doneCount(lesson)}/{exercisesIn(lesson).length} · {ideasIn(lesson)} ideas
+                              {doneCount(lesson)}/{lesson.exercises.length} · {lesson.ideas} ideas
                             </span>
                           </>
                         )}
@@ -127,7 +131,7 @@ export function Path({ units }: { units: Unit[] }) {
                       <div className="flex w-8 flex-col items-center">
                         <span className={`h-3 w-px ${i === 0 ? "bg-transparent" : "bg-zinc-800"}`} />
                         <span
-                          className={`grid size-8 shrink-0 place-items-center rounded-lg border border-b-[3px] text-[11px] transition-colors ${
+                          className={`grid size-8 shrink-0 place-items-center rounded-lg border border-b-[3px] text-xs font-semibold transition-colors ${
                             done
                               ? "border-emerald-600 bg-emerald-400 text-emerald-950"
                               : current
@@ -137,7 +141,7 @@ export function Path({ units }: { units: Unit[] }) {
                                   : "border-zinc-800 text-zinc-600"
                           }`}
                         >
-                          {done ? "✓" : lesson ? String(i + 1).padStart(2, "0") : "◆"}
+                          {done ? "✓" : lesson ? i + 1 : "◆"}
                         </span>
                         <span className={`w-px flex-1 ${last ? "bg-transparent" : "bg-zinc-800"}`} />
                       </div>
@@ -159,16 +163,18 @@ export function Path({ units }: { units: Unit[] }) {
         })}
       </main>
 
-      <footer className="flex flex-col gap-3 border-t border-zinc-800 py-6 text-[11px] leading-relaxed text-zinc-500">
+      <footer className="flex flex-col gap-3 border-t border-zinc-800 py-6 text-xs leading-relaxed text-zinc-500">
         <p>
           Progress is saved in this browser only, with no account. Clearing your browser&apos;s site data removes it, so
           keep a copy if it matters:{" "}
-          <button onClick={download} className="text-zinc-300 transition-colors hover:text-zinc-50">
-            ./export
+          <button onClick={download} className="text-zinc-300 underline underline-offset-2 transition-colors hover:text-zinc-50">
+            Export progress
           </button>{" "}
-          <button onClick={() => file.current?.click()} className="text-zinc-300 transition-colors hover:text-zinc-50">
-            ./import
+          or{" "}
+          <button onClick={() => file.current?.click()} className="text-zinc-300 underline underline-offset-2 transition-colors hover:text-zinc-50">
+            import a saved file
           </button>
+          .
           <input
             ref={file}
             type="file"

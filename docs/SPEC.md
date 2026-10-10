@@ -70,6 +70,14 @@ A new idea arrives on a concept card, and the next exercise uses it.
 
 A fully free-form sandbox is out of scope for v1.
 
+### Decisions made when building the real canvas
+
+- **Resources that span zones carry a switch.** A load balancer or Auto Scaling group is dropped into one subnet and starts out in that zone only. Its card has a control to switch it on in the other zone, and once on in both it sits across the middle of the row. A database has the same control for a Multi-AZ standby. This mirrors what the lessons teach and makes "switch it on in the second zone" something the learner does, not something the layout does for them.
+- **What a service runs for you is shown, but isn't yours to move.** The servers an Auto Scaling group launches, and a database's standby, appear as dashed chips in the right subnets. When a zone fails, the group's replacement server appears in the surviving zone.
+- **A hand-launched server is in the palette on purpose.** It works, but fails the "a failed app server is replaced automatically" requirement, which is the reason Auto Scaling groups exist.
+- **The NAT gateway stretch goal teaches the zonal kind**, one per zone, because that is what the exams ask about. Regional NAT gateways exist and are worth a mention in a later lesson.
+- **Icons are our own drawn set**, shared with the lesson diagrams. No AWS artwork is used, so there are no usage terms to check.
+
 ### Scenario mode (planned, after the real capstone canvas)
 
 A separate mode, opened up by finishing unit 2: the learner is handed a scenario at random and architects it on the same drag-and-drop canvas.
@@ -140,7 +148,10 @@ Content lives as typed data files in the repository, validated against a schema 
 
 ### Visual direction
 
-A dark, crisp, engineering look in mono type, made more playful after the first build:
+A dark, crisp look that is this product's own, made more playful after the first build. It deliberately avoids the motifs of the author's portfolio: no command-line styling for controls (`./exit`, `// headings`, prompt characters) and no all-monospace type.
+
+- **Type.** A sans typeface for everything people read. Monospace is kept for things that really are code: zone names, address ranges, service tags, counts.
+- **Controls say what they do.** A close button, "Start again", "Export progress", "Back to the path".
 
 - **Soft contrast.** Nothing is pure black or pure white. The neutral scale is remapped in `app/globals.css` to a blue-tinted charcoal page with soft grey text, because bright white on black was tiring to read.
 - **Keycaps.** Anything pressable has a thick bottom edge and sinks when pushed, like a mechanical keyboard key.
@@ -155,14 +166,12 @@ Reordered on 2026-10-11 to bring Solutions Architect material and the coverage v
 2. **Lesson engine and the on-ramp unit.** Done: the engine and all three on-ramp lessons are built and awaiting content review. Not yet deployed.
 3. **Coverage view.** A first version is built at `/coverage`: per exam domain, how many written exercises have been answered correctly. It still needs mastery levels and a way to show how much of each domain is unwritten.
 4. **Main unit lessons**, drafted and reviewed one at a time. This unit carries most of the Solutions Architect weight. *All six lessons are drafted and awaiting content review.*
-5. **The real capstone canvas**, built with what the prototype taught.
+5. **The real capstone canvas.** A first version is built at `/build/web-app`, replacing the prototype (which was removed; it is in the git history). It is driven by a scenario definition in `lib/canvas/scenarios.ts`, so scenario mode can add more without touching the canvas.
 6. **Scenario mode**: random scenarios on the capstone canvas.
 7. **The rest of the progress view**: mastery, streak, review queue.
 8. **Deploy to Vercel**, when asked.
 
 ## Open questions
 
-- The canvas prototype's stretch rule says a NAT gateway lives in one zone and can't span two. AWS now also offers regional NAT gateways that expand across zones. Decide whether the real capstone teaches the zonal kind, the regional kind, or both.
 
 - Final product name.
-- How resources that span AZs (load balancer, auto scaling group, Multi-AZ database) are represented on the canvas. The prototype is expected to inform this.

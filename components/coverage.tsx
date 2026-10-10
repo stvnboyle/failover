@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { EXAM_DOMAINS } from "@/content/schema";
+import { EXAM_DOMAINS } from "@/content/taxonomy";
 import { mastered, useProgress } from "@/lib/progress";
 
 type DomainId = keyof typeof EXAM_DOMAINS;
@@ -17,17 +17,17 @@ export function Coverage({ exercises }: { exercises: { id: string; domains: Doma
   return (
     <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col px-6">
       <header className="flex items-center justify-between py-5 text-xs">
-        <Link href="/" className="text-zinc-200 transition-colors hover:text-zinc-50">
+        <Link href="/" className="text-base font-semibold text-zinc-100">
           failover
         </Link>
-        <Link href="/" className="text-zinc-500 transition-colors hover:text-zinc-100">
-          ./path
+        <Link href="/" className="text-zinc-400 transition-colors hover:text-zinc-100">
+          ← Back to the path
         </Link>
       </header>
 
       <main className="flex flex-1 flex-col gap-12 py-10">
         <section>
-          <h1 className="text-[32px] leading-tight text-zinc-100">Exam coverage</h1>
+          <h1 className="text-[34px] font-semibold leading-tight text-zinc-100">Exam coverage</h1>
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-zinc-400">
             Every exercise counts towards one or more exam domains. This shows how much of what is written you have got
             right at least once.
@@ -42,11 +42,8 @@ export function Coverage({ exercises }: { exercises: { id: string; domains: Doma
           const domains = (Object.keys(EXAM_DOMAINS) as DomainId[]).filter((d) => EXAM_DOMAINS[d].exam === exam.code);
           return (
             <section key={exam.code}>
-              <p className="text-[11px] text-zinc-500">
-                {"// "}
-                {exam.code}
-              </p>
-              <h2 className="mt-2 text-lg text-zinc-100">{exam.name}</h2>
+              <p className="font-mono text-xs text-zinc-500">{exam.code}</p>
+              <h2 className="mt-2 text-xl font-semibold text-zinc-100">{exam.name}</h2>
               <ul className="mt-5 flex flex-col gap-5">
                 {domains.map((d) => {
                   const written = exercises.filter((e) => e.domains.includes(d));
@@ -82,7 +79,7 @@ export function Coverage({ exercises }: { exercises: { id: string; domains: Doma
         })}
       </main>
 
-      <footer className="border-t border-zinc-800 py-6 text-[11px] leading-relaxed text-zinc-500">
+      <footer className="border-t border-zinc-800 py-6 text-xs leading-relaxed text-zinc-500">
         Domain names and weightings are taken from the official AWS exam guides. failover is an independent project,
         not affiliated with or endorsed by Amazon Web Services.
       </footer>

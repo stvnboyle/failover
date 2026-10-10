@@ -29,6 +29,21 @@ const ICON: Record<Part["icon"], { color: string; glyph: ReactNode }> = {
   script: { color: "#f87171", glyph: icon(<><path d="M4.500 4L1.500 7l3 3M9.500 4l3 3-3 3M8 2.500l-2 9" /></>) },
 };
 
+/** The icon for a kind of part, in its own colour, on a tinted square. */
+export function Glyph({ icon: name }: { icon: Part["icon"] }) {
+  const { color, glyph } = ICON[name];
+  return (
+    <span
+      className="grid size-6 shrink-0 place-items-center rounded"
+      style={{ color, background: `color-mix(in oklab, ${color} 14%, transparent)` }}
+    >
+      {glyph}
+    </span>
+  );
+}
+
+export const colorOf = (icon: Part["icon"]) => ICON[icon].color;
+
 export type PartState = "plain" | "selected" | "right" | "wrong" | "dim";
 
 const BORDER: Record<PartState, string> = {
@@ -52,13 +67,13 @@ export function PartCard({ part, state = "plain" }: { part: Part; state?: PartSt
         </span>
         <span className="min-w-0 leading-tight">
           <span className="block truncate text-xs text-zinc-100">{part.label}</span>
-          {part.tag && <span className="block truncate text-[10px] text-zinc-500">{part.tag}</span>}
+          {part.tag && <span className="block truncate font-mono text-[10px] text-zinc-500">{part.tag}</span>}
         </span>
       </div>
       {part.holds && (
         <ul className="flex flex-col gap-1 border-t border-zinc-800 px-2.5 py-2">
           {part.holds.map((key) => (
-            <li key={key} className="flex items-center gap-2 text-[11px] text-zinc-400">
+            <li key={key} className="flex items-center gap-2 font-mono text-[11px] text-zinc-400">
               <span className="text-zinc-600">{ICON.file.glyph}</span>
               {key}
             </li>

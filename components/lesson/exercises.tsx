@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { Chain, Gap, PartCard } from "@/components/diagram";
 import type { Choice, Exercise, Fix, Match, Slot } from "@/content/schema";
+import { useKeydown } from "@/lib/use-keydown";
 
 /** What an exercise reports once the learner has committed to something. */
 export type Answer = {
@@ -31,15 +32,10 @@ function shuffled<T>(items: T[], seed: string): T[] {
 
 /** Number keys pick an option while the exercise is open. */
 function useNumberKeys(count: number, enabled: boolean, pick: (index: number) => void) {
-  useEffect(() => {
-    if (!enabled) return;
-    const onKey = (e: KeyboardEvent) => {
-      const n = Number(e.key);
-      if (n >= 1 && n <= count) pick(n - 1);
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  });
+  useKeydown((e) => {
+    const n = Number(e.key);
+    if (n >= 1 && n <= count) pick(n - 1);
+  }, enabled);
 }
 
 const optionClass = (state: "plain" | "selected" | "right" | "wrong" | "dim") =>
@@ -188,10 +184,37 @@ function MatchExercise({ exercise, locked, onAnswer }: Props<Match>) {
   const [misses, setMisses] = useState(0);
   const [slip, setSlip] = useState<{ right: number; why: string } | null>(null);
 
+  // A line is drawn from each matched term to its meaning, measured from where the two cells sit.
+  const grid = useRef<HTMLDivElement>(null);
+  const lefts = useRef<(HTMLElement | null)[]>([]);
+  const rightEls = useRef<(HTMLElement | null)[]>([]);
+  const [lines, setLines] = useState<{ pair: number; d: string }[]>([]);
+
+  useLayoutEffect(() => {
+    const measure = () =>
+      setLines(
+        done.flatMap((pair) => {
+          const from = lefts.current[pair];
+          const to = rightEls.current[pair];
+          if (!from || !to) return [];
+          const x1 = from.offsetLeft + from.offsetWidth;
+          const y1 = from.offsetTop + from.offsetHeight / 2;
+          const x2 = to.offsetLeft;
+          const y2 = to.offsetTop + to.offsetHeight / 2;
+          const bend = (x2 - x1) / 2;
+          return [{ pair, d: `M${x1},${y1} C${x1 + bend},${y1} ${x2 - bend},${y2} ${x2},${y2}` }];
+        }),
+      );
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(grid.current!);
+    return () => observer.disconnect();
+  }, [done]);
+
   const tryPair = (right: number) => {
     if (left === null) return;
     if (right !== left) {
-      setMisses(misses + 1);
+      setMisses((n) => n + 1);
       setSlip({ right, why: pairs[left].why });
       setLeft(null);
       return;
@@ -220,12 +243,20 @@ function MatchExercise({ exercise, locked, onAnswer }: Props<Match>) {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-[2fr_3fr] gap-x-6 gap-y-2">
+      <div ref={grid} className="relative grid grid-cols-[2fr_3fr] gap-x-16 gap-y-2">
+        <svg className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden>
+          {lines.map(({ pair, d }) => (
+            <path key={pair} d={d} pathLength={1} className="draw-in" fill="none" stroke="#34d399" strokeWidth="2" strokeLinecap="round" />
+          ))}
+        </svg>
         {pairs.map((pair, row) => {
           const r = rights[row];
           return [
             <button
               key={`l${row}`}
+              ref={(el) => {
+                lefts.current[row] = el;
+              }}
               disabled={locked || done.includes(row)}
               onClick={() => {
                 setLeft(row);
@@ -237,6 +268,9 @@ function MatchExercise({ exercise, locked, onAnswer }: Props<Match>) {
             </button>,
             <button
               key={`r${row}-${slip?.right === r ? misses : 0}`}
+              ref={(el) => {
+                rightEls.current[r] = el;
+              }}
               disabled={locked || done.includes(r) || left === null}
               onClick={() => tryPair(r)}
               className={cell(done.includes(r) ? "right" : slip?.right === r ? "wrong" : "plain")}

@@ -11,5 +11,5 @@ export const webApp: Unit = {
   title: "Run a web app that survives a data-centre failure",
   scenario: "The site now has a server and a database. Keep it serving when a whole data centre goes dark.",
   lessons: [regions, vpc, servers, loadBalancing, autoScaling, database],
-  capstone: { title: "Build it yourself", href: "/prototype/canvas" },
+  capstone: { title: "Build it yourself", href: "/build/web-app" },
 };
