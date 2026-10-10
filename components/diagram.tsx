@@ -19,6 +19,10 @@ const ICON: Record<Part["icon"], { color: string; glyph: ReactNode }> = {
   cdn: { color: "#a78bfa", glyph: icon(<><circle cx="7" cy="7" r="5.500" /><path d="M1.500 7h11M7 1.500c1.800 1.600 1.800 9.400 0 11M7 1.500c-1.800 1.600-1.800 9.400 0 11" /></>) },
   dns: { color: "#f472b6", glyph: icon(<><path d="M2 4h10M2 7h10M2 10h6" /><circle cx="11" cy="10" r="1" /></>) },
   policy: { color: "#fbbf24", glyph: icon(<><path d="M7 1.500l4.500 1.800v3.400c0 2.700-1.900 4.600-4.500 5.800-2.600-1.200-4.500-3.100-4.500-5.800V3.300z" /><path d="M5 7l1.500 1.500L9.200 5.800" /></>) },
+  region: { color: "#a78bfa", glyph: icon(<><path d="M7 12.500S2.800 8.600 2.800 5.600a4.200 4.200 0 0 1 8.400 0C11.200 8.600 7 12.500 7 12.500z" /><circle cx="7" cy="5.600" r="1.500" /></>) },
+  network: { color: "#94a3b8", glyph: icon(<><rect x="1.500" y="1.500" width="11" height="11" rx="1.500" strokeDasharray="2.500 1.800" /><circle cx="5" cy="7" r="1" /><circle cx="9" cy="7" r="1" /></>) },
+  subnet: { color: "#38bdf8", glyph: icon(<><rect x="2" y="3.500" width="10" height="7" rx="1" /><path d="M5 3.500v7M9 3.500v7" /></>) },
+  gateway: { color: "#34d399", glyph: icon(<><path d="M3 12V5.500a4 4 0 0 1 8 0V12" /><path d="M1.500 12h11M7 5v4M5.500 7.500L7 9l1.500-1.500" /></>) },
   script: { color: "#f87171", glyph: icon(<><path d="M4.500 4L1.500 7l3 3M9.500 4l3 3-3 3M8 2.500l-2 9" /></>) },
 };
 

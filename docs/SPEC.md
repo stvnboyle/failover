@@ -70,6 +70,15 @@ A new idea arrives on a concept card, and the next exercise uses it.
 
 A fully free-form sandbox is out of scope for v1.
 
+### Scenario mode (planned, after the real capstone canvas)
+
+A separate mode, opened up by finishing unit 2: the learner is handed a scenario at random and architects it on the same drag-and-drop canvas.
+
+- A scenario is data, exactly like a capstone: a brief, a palette, a set of zones and a list of rules. Nothing about the canvas itself changes, so each new scenario is content, not engineering.
+- "Random" means drawn from a pool of written scenarios, with requirements that can be switched on or off to vary them (for example "must survive a zone failing", "must stay private", "keep the monthly cost down"). It does not mean generated on the fly, because a generated brief has no rules to judge it by.
+- Scenarios only use services the learner has met in a lesson, so the pool grows as units are written.
+- This is the closest thing in the product to how Solutions Architect questions are asked, so each scenario is tagged against that exam's domains.
+
 ## Progress and reward
 
 Learning-first. Progress is expressed as mastery and coverage, not points.
@@ -145,12 +154,15 @@ Reordered on 2026-10-11 to bring Solutions Architect material and the coverage v
 1. **Throwaway canvas prototype.** Done, in `app/prototype/canvas`. Snap to zones won, and plain rules judged it fairly.
 2. **Lesson engine and the on-ramp unit.** Done: the engine and all three on-ramp lessons are built and awaiting content review. Not yet deployed.
 3. **Coverage view.** A first version is built at `/coverage`: per exam domain, how many written exercises have been answered correctly. It still needs mastery levels and a way to show how much of each domain is unwritten.
-4. **Main unit lessons**, drafted and reviewed one at a time. This unit carries most of the Solutions Architect weight, so it comes next.
+4. **Main unit lessons**, drafted and reviewed one at a time. This unit carries most of the Solutions Architect weight. *In progress: lessons 1 and 2 of 6 are drafted.*
 5. **The real capstone canvas**, built with what the prototype taught.
-6. **The rest of the progress view**: mastery, streak, review queue.
-7. **Deploy to Vercel**, when asked.
+6. **Scenario mode**: random scenarios on the capstone canvas.
+7. **The rest of the progress view**: mastery, streak, review queue.
+8. **Deploy to Vercel**, when asked.
 
 ## Open questions
+
+- The canvas prototype's stretch rule says a NAT gateway lives in one zone and can't span two. AWS now also offers regional NAT gateways that expand across zones. Decide whether the real capstone teaches the zonal kind, the regional kind, or both.
 
 - Final product name.
 - How resources that span AZs (load balancer, auto scaling group, Multi-AZ database) are represented on the canvas. The prototype is expected to inform this.

@@ -27,7 +27,21 @@ const text = z.string().trim().min(1);
 
 // ---- diagrams ----------------------------------------------------------------
 
-export const ICONS = ["visitor", "bucket", "file", "server", "database", "cdn", "dns", "policy", "script"] as const;
+export const ICONS = [
+  "visitor",
+  "bucket",
+  "file",
+  "server",
+  "database",
+  "cdn",
+  "dns",
+  "policy",
+  "script",
+  "region",
+  "network",
+  "subnet",
+  "gateway",
+] as const;
 
 /** One box in a diagram. Diagrams are a chain read left to right. */
 const part = z.object({
