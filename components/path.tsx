@@ -15,7 +15,7 @@ export type PathUnit = {
   capstone?: { title: string; href?: string };
 };
 
-export function Path({ units }: { units: PathUnit[] }) {
+export function Path({ units, scenarios }: { units: PathUnit[]; scenarios: string[] }) {
   const known = mastered(useProgress());
   const [notice, setNotice] = useState<string | null>(null);
   const file = useRef<HTMLInputElement>(null);
@@ -161,6 +161,30 @@ export function Path({ units }: { units: PathUnit[] }) {
             </section>
           );
         })}
+        <section>
+          <p className="text-xs font-medium uppercase tracking-widest text-zinc-500">Practice</p>
+          <h2 className="mt-2 text-xl font-semibold text-zinc-100">Scenario mode</h2>
+          <p className="mt-1 text-sm leading-relaxed text-zinc-500">
+            Be handed a brief at random and architect it on the canvas. Best once you have finished unit 2.
+          </p>
+          <Link
+            href="/scenarios"
+            className="group mt-6 flex items-center gap-4 rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 transition-colors hover:border-zinc-600"
+          >
+            <span className="min-w-0 flex-1">
+              <span className="block text-sm font-medium text-zinc-100">{scenarios.length} scenarios</span>
+              <span className="mt-0.5 block text-xs text-zinc-500">
+                Some must survive a failure, some must be cheap, and one must be unreachable.
+              </span>
+            </span>
+            <span className="shrink-0 text-right text-xs">
+              <span className="text-zinc-400">open →</span>
+              <span className="mt-0.5 block text-zinc-600">
+                {scenarios.filter((id) => known.has(`capstone:${id}`)).length}/{scenarios.length} built
+              </span>
+            </span>
+          </Link>
+        </section>
       </main>
 
       <footer className="flex flex-col gap-3 border-t border-zinc-800 py-6 text-xs leading-relaxed text-zinc-500">

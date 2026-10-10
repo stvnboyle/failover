@@ -78,9 +78,28 @@ A fully free-form sandbox is out of scope for v1.
 - **The NAT gateway stretch goal teaches the zonal kind**, one per zone, because that is what the exams ask about. Regional NAT gateways exist and are worth a mention in a later lesson.
 - **Icons are our own drawn set**, shared with the lesson diagrams. No AWS artwork is used, so there are no usage terms to check.
 
-### Scenario mode (planned, after the real capstone canvas)
+### Scenario mode
 
-A separate mode, opened up by finishing unit 2: the learner is handed a scenario at random and architects it on the same drag-and-drop canvas.
+A separate mode at `/scenarios`, suggested once unit 2 is finished: the learner is dealt a scenario at random and architects it on the same drag-and-drop canvas. A first version is built with five scenarios.
+
+| Scenario | What it asks for | What it punishes |
+|---|---|---|
+| Launch day | A web app with a database that survives a zone failing (the unit 2 capstone) | Anything in a single zone |
+| Demo on a budget | The same app, as cheaply as possible, allowed to go down | Standbys, second zones, a NAT gateway |
+| The image resizer | A resilient API that stores nothing and fetches from other sites | Adding a database, one NAT gateway for two zones |
+| Friday's prototype | A cheap API that stores nothing | A second zone, a second NAT gateway |
+| The night shift | Resilient overnight jobs nothing on the internet can reach | A load balancer, any connection from the internet |
+
+The point of the set is that the right answer to one is the wrong answer to another, so a learner has to read the brief and can't replay the capstone.
+
+How it is built:
+
+- Each scenario declares a **shape** (takes requests from users or not, keeps data or not), which decides what "working" means when a zone is failed.
+- Rules come from one shared library in `lib/canvas/scenarios.ts`. A scenario is a selection from it.
+- "Deal me a scenario" picks one not yet built, and any of them once all are built.
+- Building a scenario is saved to progress and counts towards its exam domains on the coverage page.
+
+Original intent, still the guide for adding more:
 
 - A scenario is data, exactly like a capstone: a brief, a palette, a set of zones and a list of rules. Nothing about the canvas itself changes, so each new scenario is content, not engineering.
 - "Random" means drawn from a pool of written scenarios, with requirements that can be switched on or off to vary them (for example "must survive a zone failing", "must stay private", "keep the monthly cost down"). It does not mean generated on the fly, because a generated brief has no rules to judge it by.
@@ -167,7 +186,7 @@ Reordered on 2026-10-11 to bring Solutions Architect material and the coverage v
 3. **Coverage view.** A first version is built at `/coverage`: per exam domain, how many written exercises have been answered correctly. It still needs mastery levels and a way to show how much of each domain is unwritten.
 4. **Main unit lessons**, drafted and reviewed one at a time. This unit carries most of the Solutions Architect weight. *All six lessons are drafted and awaiting content review.*
 5. **The real capstone canvas.** A first version is built at `/build/web-app`, replacing the prototype (which was removed; it is in the git history). It is driven by a scenario definition in `lib/canvas/scenarios.ts`, so scenario mode can add more without touching the canvas.
-6. **Scenario mode**: random scenarios on the capstone canvas.
+6. **Scenario mode.** A first version is built at `/scenarios` with five scenarios. Next: more scenarios as new units add services to the palette.
 7. **The rest of the progress view**: mastery, streak, review queue.
 8. **Deploy to Vercel**, when asked.
 

@@ -270,7 +270,9 @@ function Canvas({ scenario }: { scenario: Scenario }) {
   const stretch = verdicts.filter((v) => v.rule.stretch);
   const passed = core.filter((v) => v.pass).length;
   const complete = passed === core.length;
-  const extra = stretch.every((v) => v.pass);
+  const extra = stretch.length > 0 && stretch.every((v) => v.pass);
+  // Whether this scenario takes requests from users, or is jobs that only ever call out.
+  const { inbound } = scenario.shape;
 
   // Finishing the core requirements counts as completing the capstone.
   const recorded = useRef(false);
@@ -281,8 +283,8 @@ function Canvas({ scenario }: { scenario: Scenario }) {
     }
   }, [complete, scenario.id]);
 
-  const t: Traffic = traffic(diagram, failed);
-  const healthy = traffic(diagram, null);
+  const t: Traffic = traffic(diagram, failed, scenario.shape);
+  const healthy = traffic(diagram, null, scenario.shape);
   const services = diagram.nodes.length - 1;
   const flagged = verdicts.filter((v) => v.hint).length;
   const kindOf = (id: string) => nodeById(diagram, id)!.kind;
@@ -290,14 +292,14 @@ function Canvas({ scenario }: { scenario: Scenario }) {
   // One dry line about where things stand. It never says what to do next.
   const [status, statusTone] = failed
     ? t.serving
-      ? [`${ZONE_NAME[failed]} just went dark. Users didn't notice.`, "text-emerald-400"]
+      ? [`${ZONE_NAME[failed]} just went dark. ${inbound ? "Users didn't notice." : "The jobs kept running."}`, "text-emerald-400"]
       : healthy.serving
-        ? [`${ZONE_NAME[failed]} went dark and took the app with it.`, "text-red-400"]
+        ? [`${ZONE_NAME[failed]} went dark and took ${inbound ? "the app" : "the jobs"} with it.`, "text-red-400"]
         : [`${ZONE_NAME[failed]} is dark. There wasn't much to lose yet.`, "text-red-400"]
     : complete
       ? [extra ? "Every check passes, stretch included. Now try to break it." : "Every check passes. Now try to break it.", "text-emerald-400"]
       : services === 0
-        ? ["An empty VPC and some impatient users. Drag something in.", "text-zinc-400"]
+        ? [`An empty VPC and ${inbound ? "some impatient users" : "a queue of jobs waiting"}. Drag something in.`, "text-zinc-400"]
         : [`${passed} of ${core.length} checks green.${flagged ? ` ${flagged} want${flagged === 1 ? "s" : ""} another look.` : ""}`, "text-zinc-300"];
 
   const dropTarget = (subnet: Subnet) => ({
@@ -353,6 +355,12 @@ function Canvas({ scenario }: { scenario: Scenario }) {
 
   /** What a card says under its name, given what has failed. */
   const noteFor = (n: Node): ReactNode => {
+    if (n.kind === "users" && !inbound)
+      return diagram.edges.some((e) => e.a === n.id || e.b === n.id) ? (
+        <span className="text-red-400">has a way in</span>
+      ) : (
+        "no way in"
+      );
     if (n.kind === "users")
       return t.serving ? (
         <span className="text-emerald-400">200 OK</span>
@@ -559,6 +567,11 @@ function Canvas({ scenario }: { scenario: Scenario }) {
             </h1>
             <p key={status} className={`rise-in mt-3 text-sm ${statusTone}`}>
               {status}
+              {complete && (
+                <Link href="/scenarios" className="ml-3 text-zinc-300 underline underline-offset-2 transition-colors hover:text-zinc-50">
+                  Try another scenario →
+                </Link>
+              )}
             </p>
           </div>
 
@@ -688,16 +701,18 @@ function Canvas({ scenario }: { scenario: Scenario }) {
             </ul>
           </section>
 
-          <section>
-            <Heading aside={<span className={`text-xs ${extra ? "text-violet-300" : "text-zinc-500"}`}>{extra ? "Cleared" : "Optional"}</span>}>
-              Stretch
-            </Heading>
-            <ul className="flex flex-col gap-3">
-              {stretch.map((v) => (
-                <Check key={v.rule.id} text={v.rule.text} pass={v.pass} hint={v.hint} tone="violet" />
-              ))}
-            </ul>
-          </section>
+          {stretch.length > 0 && (
+            <section>
+              <Heading aside={<span className={`text-xs ${extra ? "text-violet-300" : "text-zinc-500"}`}>{extra ? "Cleared" : "Optional"}</span>}>
+                Stretch
+              </Heading>
+              <ul className="flex flex-col gap-3">
+                {stretch.map((v) => (
+                  <Check key={v.rule.id} text={v.rule.text} pass={v.pass} hint={v.hint} tone="violet" />
+                ))}
+              </ul>
+            </section>
+          )}
 
           <section>
             <Heading>Break something</Heading>
@@ -725,11 +740,23 @@ function Canvas({ scenario }: { scenario: Scenario }) {
               <dd className="text-zinc-200">{services}</dd>
               <dt className="text-zinc-500">Connections</dt>
               <dd className="text-zinc-200">{diagram.edges.length}</dd>
-              <dt className="text-zinc-500">Users see</dt>
+              <dt className="text-zinc-500">{inbound ? "Users see" : "The jobs"}</dt>
               <dd className={t.serving ? "text-emerald-400" : failed ? "text-red-400" : "text-zinc-500"}>
-                {t.serving ? (t.promoted ? "The app, from the standby database" : "The app") : failed ? "An error" : "Nothing yet"}
+                {inbound
+                  ? t.serving
+                    ? t.promoted
+                      ? "It works, served from the standby database"
+                      : "It works"
+                    : failed
+                      ? "An error"
+                      : "Nothing yet"
+                  : t.serving
+                    ? "Running"
+                    : failed
+                      ? "Stopped"
+                      : "Not running yet"}
               </dd>
-              <dt className="text-zinc-500">Updates</dt>
+              <dt className="text-zinc-500">Calls out</dt>
               <dd className={t.outbound.size ? "text-zinc-200" : "text-zinc-500"}>
                 {t.outbound.size ? "Reaching the internet through NAT" : "No route out"}
               </dd>

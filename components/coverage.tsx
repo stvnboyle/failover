@@ -29,8 +29,8 @@ export function Coverage({ exercises }: { exercises: { id: string; domains: Doma
         <section>
           <h1 className="text-[34px] font-semibold leading-tight text-zinc-100">Exam coverage</h1>
           <p className="mt-4 max-w-xl text-sm leading-relaxed text-zinc-400">
-            Every exercise counts towards one or more exam domains. This shows how much of what is written you have got
-            right at least once.
+            Every exercise and canvas scenario counts towards one or more exam domains. This shows how much of what is
+            written you have got right at least once.
           </p>
           <p className="mt-4 max-w-xl rounded-xl border border-amber-400/30 bg-amber-400/[0.05] px-4 py-3 text-xs leading-relaxed text-amber-200">
             What is written so far is a small part of either exam. A full bar here means you have finished the lessons
@@ -66,7 +66,7 @@ export function Coverage({ exercises }: { exercises: { id: string; domains: Doma
                         ) : (
                           <>
                             <span className={got > 0 ? "text-emerald-300" : ""}>{got}</span> of {written.length} written
-                            exercises right at least once
+                            exercises and scenarios right at least once
                           </>
                         )}
                       </p>

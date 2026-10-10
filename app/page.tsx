@@ -1,5 +1,6 @@
 import { Path, type PathUnit } from "@/components/path";
 import { exercisesOf, UNITS } from "@/content";
+import { SCENARIOS } from "@/lib/canvas/scenarios";
 
 // The path only needs an outline, so the lessons' full content stays on the server.
 const outline: PathUnit[] = UNITS.map((unit) => ({
@@ -20,5 +21,5 @@ const outline: PathUnit[] = UNITS.map((unit) => ({
 }));
 
 export default function Home() {
-  return <Path units={outline} />;
+  return <Path units={outline} scenarios={SCENARIOS.map((s) => s.id)} />;
 }

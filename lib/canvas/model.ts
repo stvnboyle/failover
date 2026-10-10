@@ -74,8 +74,15 @@ export type Traffic = {
   outbound: Set<string>;
 };
 
+/**
+ * What kind of system a scenario asks for, which decides what "working" means.
+ * A web app takes requests from users and keeps data; an API may keep none; overnight jobs take no requests at all.
+ */
+export type Shape = { inbound: boolean; database: boolean };
+export const WEB: Shape = { inbound: true, database: true };
+
 /** What is carrying traffic, optionally with one zone dark. */
-export function traffic(d: Diagram, failed: Az | null): Traffic {
+export function traffic(d: Diagram, failed: Az | null, shape: Shape = WEB): Traffic {
   const down = new Set(d.nodes.filter((n) => !isUp(n, failed)).map((n) => n.id));
   const promoted =
     ofKind(d, "rds").find((n) => n.both && failed !== null && azOf(n) === failed)?.id ?? null;
@@ -83,32 +90,52 @@ export function traffic(d: Diagram, failed: Az | null): Traffic {
   const active = new Set<string>();
   const live = new Set<string>();
   const up = (n: Node) => !down.has(n.id);
+  const carry = (nodes: Node[], hops: Edge[]) => {
+    nodes.forEach((n) => active.add(n.id));
+    hops.forEach((e) => live.add(e.id));
+  };
 
-  for (const u of ofKind(d, "users"))
-    for (const lb of ofKind(d, "alb").filter(up))
-      for (const c of ofKind(d, ...COMPUTE).filter(up))
-        for (const db of ofKind(d, "rds").filter(up)) {
-          const hops = [edgeBetween(d, u, lb), edgeBetween(d, lb, c), edgeBetween(d, c, db)];
-          if (hops.every(Boolean) && canRoute(lb, c, failed)) {
-            [u, lb, c, db].forEach((n) => active.add(n.id));
-            hops.forEach((e) => live.add(e!.id));
+  const computes = ofKind(d, ...COMPUTE).filter(up);
+  const dbs = ofKind(d, "rds").filter(up);
+
+  if (shape.inbound) {
+    for (const u of ofKind(d, "users"))
+      for (const lb of ofKind(d, "alb").filter(up))
+        for (const c of computes) {
+          const in1 = edgeBetween(d, u, lb);
+          const in2 = edgeBetween(d, lb, c);
+          if (!in1 || !in2 || !canRoute(lb, c, failed)) continue;
+          if (!shape.database) carry([u, lb, c], [in1, in2]);
+          for (const db of shape.database ? dbs : []) {
+            const store = edgeBetween(d, c, db);
+            if (store) carry([u, lb, c, db], [in1, in2, store]);
           }
         }
+  } else if (shape.database) {
+    for (const c of computes)
+      for (const db of dbs) {
+        const store = edgeBetween(d, c, db);
+        if (store) carry([c, db], [store]);
+      }
+  }
 
   const outbound = new Set<string>();
-  for (const c of ofKind(d, ...COMPUTE).filter(up))
+  for (const c of computes)
     for (const nat of ofKind(d, "nat").filter(up)) {
       const hop = edgeBetween(d, c, nat);
       if (hop && tierOf(nat) === "public") {
         outbound.add(hop.id);
         active.add(nat.id);
+        if (!shape.inbound) active.add(c.id);
       }
     }
 
-  return { serving: live.size > 0, down, promoted, active, live, outbound };
+  // Jobs that take no requests are working when they can reach what they need: the internet, and their database if they have one.
+  const serving = shape.inbound ? live.size > 0 : outbound.size > 0 && (!shape.database || live.size > 0);
+  return { serving, down, promoted, active, live, outbound };
 }
 
-export const serves = (d: Diagram, failed: Az | null) => traffic(d, failed).serving;
+export const serves = (d: Diagram, failed: Az | null, shape: Shape = WEB) => traffic(d, failed, shape).serving;
 
 // ---- judging -----------------------------------------------------------------
 
@@ -130,11 +157,16 @@ export const judge = (rules: Rule[], d: Diagram) => rules.map((rule) => ({ rule,
 export type Scenario = {
   id: string;
   title: string;
+  /** One line for the list of scenarios. */
+  summary: string;
   brief: string;
   /** The part of the brief to pick out, which must appear in it word for word. */
   stress: string;
+  shape: Shape;
   palette: Kind[];
   rules: Rule[];
-  /** Why a connection between two kinds isn't needed here, keyed "kind|kind" in alphabetical order. */
+  /** Why a connection between two kinds isn't needed here, or null if the design uses it. */
   unneeded: (a: Kind, b: Kind) => string | null;
+  /** The Solutions Architect exam domains this scenario exercises, as ids from the taxonomy. */
+  domains: ("saa-1" | "saa-2" | "saa-3" | "saa-4")[];
 };
