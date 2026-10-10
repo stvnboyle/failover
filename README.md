@@ -9,7 +9,7 @@ Working title. An independent project, not affiliated with or endorsed by Amazon
 Early. Desktop only, runs entirely in the browser, no accounts.
 
 - **Lesson engine**: concept cards and four exercise types (choose one, match pairs, fill the gap, fix the design). Missed exercises come back at the end of the lesson.
-- **Unit 1** ("Put a static site on the internet") is drafted in full: three lessons on S3, CloudFront and Route 53, 30 exercises, awaiting review. Unit 2 has its first two lessons drafted (Regions and Availability Zones, VPCs and subnets) and four more outlined.
+- **Unit 1** ("Put a static site on the internet") is drafted in full: three lessons on S3, CloudFront and Route 53, 30 exercises, awaiting review. Unit 2 has four of its six lessons drafted (Regions and Availability Zones, VPCs and subnets, servers and security groups, load balancing).
 - **Capstone canvas** for unit 2 exists as a throwaway prototype at `/prototype/canvas`.
 
 The full plan and the decisions behind it are in [docs/SPEC.md](docs/SPEC.md).
